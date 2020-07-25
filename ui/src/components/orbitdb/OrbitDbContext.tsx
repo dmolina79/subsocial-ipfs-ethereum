@@ -1,17 +1,27 @@
 import React, { useContext, createContext, useState, useEffect } from 'react';
 
 const IpfsClient = require('ipfs-http-client')
-const OrbitDB = require('orbit-db')
-
+import OrbitDB from 'orbit-db'
+import CounterStore from 'orbit-db-counterstore'
+import DocStore from 'orbit-db-docstore'
+import { PostDto } from '../posts/types';
 const ipfs = IpfsClient('/ip4/127.0.0.1/tcp/5001')
 
+type PostStore = DocStore<PostDto>
+
 type OrbitDb = {
-  orbitdb: any,
-  db: any,
+  orbitdb: OrbitDB,
+  postTotalCounter: CounterStore,
+  postStore: PostStore,
   owner: string
 }
 
-export const OrbitDbContext = createContext<OrbitDb>({ orbitdb: {}, db: {}, owner: '' });
+export const OrbitDbContext = createContext<OrbitDb>({ 
+  orbitdb: {} as any,
+  postTotalCounter: {} as any,
+  postStore: {} as any,
+  owner: '' 
+});
 
 export const useOrbitDbContext = () =>
   useContext(OrbitDbContext)
@@ -30,19 +40,23 @@ export const OrbitDbProvider = (props: React.PropsWithChildren<{}>) => {
       const orbitdb = await OrbitDB.createInstance(ipfs)
       // const db = await orbitdb.log('hello2') // this works!
       // console.log(orbitdb)
-      const orbitdbAddress = '/orbitdb/zdpuAv7x7gZ57NW6vDi1nHU16UbfR42URTZbcgxb1X5XP4o4N/user.comments.4'
-      const db = await orbitdb.open(orbitdbAddress, {
-        // create: true,
-        type: 'feed',
+      const nextPostId = await orbitdb.open('next_post_id', {
+        create: true,
+        type: 'counter',
         replicate: true
         // overwrite (boolean): Overwrite an existing database (Default: false)
         // replicate (boolean): Replicate the database with peers, requires IPFS PubSub. (Default: true)
-      })
+      }) as CounterStore
 
+      await nextPostId.load()
+
+      const postStore: PostStore = await orbitdb.docs('posts', { indexBy: 'id' } as any)
+
+      await postStore.load()
       // const peerId = ''
       // await db.access.grant('write', id2)
 
-      // const db = await orbitdb.create('user.comments.3', 'feed', {
+      // const postTotalCounter = await orbitdb.create('post_total_counter', 'counter', {
       //   accessController: {
       //     write: [
       //       '*' // Anyone can write
@@ -55,14 +69,14 @@ export const OrbitDbProvider = (props: React.PropsWithChildren<{}>) => {
       //   // overwrite: true,
       //   // replicate: false,
       //   // meta: { hello: 'meta hello' }
-      // })
-      await db.load()
+      // }) as CounterStore
       // database is now ready to be queried
 
-      setOrbit({ orbitdb, db, owner: orbitdb.identity.id })
+      setOrbit({ orbitdb, postTotalCounter: nextPostId, postStore, owner: orbitdb.id })
       if (window) {
         (window as any).orbitdb = orbitdb;
-        (window as any).db = db;
+        (window as any).postStore = postStore;
+        (window as any).postTotalCounter = nextPostId;
         // console.log('HINT: See window.orbitdb and window.db')
       }
     }

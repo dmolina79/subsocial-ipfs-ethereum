@@ -1,9 +1,9 @@
 import React, {  } from 'react'
 import { List } from 'antd';
 import ViewComment from './ViewComment';
-import { CommentDto } from './types';
+import { CommentDto, CommentsProviderProps } from './types';
 import CommentEditor from './CommentEditor';
-import { useGetRootComments, useCommentsContext } from './СommentContext';
+import CommentsProvider, { useGetRootComments, useCommentsContext } from './СommentContext';
 
 type CommentListProps = {
   comments: CommentDto[],
@@ -12,26 +12,26 @@ type CommentListProps = {
 
 export const CommentList = ({ comments, header }: CommentListProps) => {
 
-  return comments.length ? <List
-  dataSource={comments}
-  header={header}
-  itemLayout="horizontal"
-  renderItem={(comment) => <ViewComment comment={comment} />}
-/> : null
+  return comments.length
+    ? <List
+        dataSource={comments}
+        itemLayout="horizontal"
+        renderItem={(comment) => <ViewComment comment={comment} />}
+    />
+    : null
 }
 
 export const Comments = () => {
-  const { onCommentAdded } = useCommentsContext()
+  const { onCommentAdded, state: { totalCommentCount } } = useCommentsContext()
   const comments = useGetRootComments()
 
-  return <div>
+  return <>
+    <h2>{`${totalCommentCount} ${totalCommentCount > 1 ? 'replies' : 'reply'}`}</h2>
     <CommentEditor onCommentAdded={onCommentAdded} />
-    {comments.length > 0 &&
-      <CommentList
-        comments={comments}
-        header={`${comments.length} ${comments.length > 1 ? 'replies' : 'reply'}`}
-      />}
-  </div>
+    <CommentList
+      comments={comments}
+    />
+  </>
 }
 
-
+export const CommentsWithProvider = (props: CommentsProviderProps) => <CommentsProvider {...props}><Comments /></CommentsProvider>

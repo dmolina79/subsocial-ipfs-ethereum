@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Comment, Avatar, Form, Button, Input } from 'antd';
 import { CommentDto, CommentValue } from './types';
 import { useOrbitDbContext } from '../orbitdb';
+import { useCommentsContext } from './СommentContext';
 
 const { TextArea } = Input;
 
@@ -34,7 +35,8 @@ export const CommentEditor = ({ parentId = null, onCommentAdded }: CommentEditor
   const [ submitting, setSubmitting ] = useState(false)
   const [ value, setValue ] = useState('')
 
-  const { db, owner } = useOrbitDbContext()
+  const { owner } = useOrbitDbContext()
+  const { state: { commentStore } } = useCommentsContext()
 
   const addComment = async (body: string) => {
     const comment: CommentValue = {
@@ -46,7 +48,7 @@ export const CommentEditor = ({ parentId = null, onCommentAdded }: CommentEditor
       },
       parentId
     }
-    const hash = await db.add(comment, { pin: true })
+    const hash = await commentStore.add(comment)
     console.log('Added to OrbitDB log under hash:', hash)
 
     const storedComment = { id: hash, ...comment }
