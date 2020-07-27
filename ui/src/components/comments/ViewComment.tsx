@@ -7,6 +7,8 @@ import { CommentProps } from 'antd/lib/comment'
 import { useCommentsContext, useGetRepliesById } from './СommentContext';
 import CommentEditor from './CommentEditor';
 import { CommentList } from './Comments';
+import { toShortAddress } from '../utils';
+import Jdenticon from 'react-jdenticon';
 
 export type ViewCommentProps = Partial<CommentProps> & {
   comment: CommentDto
@@ -69,11 +71,10 @@ export const ViewComment = ({ comment: { id, body, owner, created } ,...antProps
     <Comment
       {...antProps}
       actions={actions}
-      author={<a>{owner}</a>}
+      author={toShortAddress(owner)}
       avatar={
         <Avatar
-          src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
-          alt={owner}
+          icon={<Jdenticon value={owner}/>}
         />
       }
       content={

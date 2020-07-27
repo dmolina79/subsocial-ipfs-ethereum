@@ -1,4 +1,3 @@
-import { Comments } from '../components/comments/Comments'
-import CommentsProvider from '../components/comments/СommentContext'
+import Posts from '../components/posts/Posts'
 
-export default () => <CommentsProvider><Comments /></CommentsProvider>
+export default Posts

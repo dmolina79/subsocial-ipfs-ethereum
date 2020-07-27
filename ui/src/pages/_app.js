@@ -4,6 +4,8 @@ import Head from 'next/head'
 import { OrbitDbProvider } from '../components/orbitdb'
 
 import '../styles/main.less'
+import '../styles/bootstrap-utilities-4.3.1.less'
+import '../styles/ant-override.less'
 
 function MyApp (props) {
   const { Component, pageProps } = props
