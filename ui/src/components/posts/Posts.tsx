@@ -1,41 +1,71 @@
-import { List } from 'antd';
-import React from 'react';
+import { List, Button } from 'antd';
+import React, { useEffect, useState } from 'react';
 import { ViewPostPreview } from './ViewPost';
 import { PostDto } from './types';
 import { useOrbitDbContext } from '../orbitdb';
-
-const listData: PostDto[] | undefined = [];
-for (let i = 0; i < 23; i++) {
-  listData.push({
-    id: '4',
-    content: {
-      body: 'We supply a series of design principles, practical patterns and high quality design resources (Sketch and Axure), to help people create their product prototypes beautifully and efficiently.',
-      title: 'Post with id: 4'
-    },
-    owner: 'i am some account',
-    created: {
-      account: 'i am some account',
-      time: 'Mon 10 Dec 2018'
-    }
-  });
-}
+import { pluralize } from '../utils';
+import Link from 'next/link';
 
 type PostsListProps = {
-  posts: PostDto[]
+  posts: PostDto[],
+  header?: React.ReactNode
 }
 
-export const PostsList = ({ posts }: PostsListProps) => {
-  const { postTotalCounter: { value: count } } = useOrbitDbContext()
+export const PostsList = ({ posts, header }: PostsListProps) => {
 
-  return <List
-    itemLayout="vertical"
-    header={<h2>{count ? count : null}</h2>}
-    size="large"
-    dataSource={posts}
-    renderItem={post => <ViewPostPreview post={post} />}
-  />
+  return posts
+    ? <List
+      size="large"
+      itemLayout='vertical'
+      header={header}
+      dataSource={posts}
+      renderItem={post => <ViewPostPreview post={post} />}
+    />
+    : <em>Loading posts...</em>;
 }
 
-export const Posts = () => <PostsList posts={listData} />
+const DynamicPosts = () => {
+  const { postStore, nextPostId: { value: count } } = useOrbitDbContext()
+  const [ posts, setPosts ] = useState<PostDto[] | undefined>()
 
-export default Posts
+  useEffect(() => {
+    if (posts?.length) return
+
+    const loadPosts = async () => {
+      const posts = await postStore.get('')
+      setPosts(posts)
+    }
+    loadPosts().catch(err => console.error(err))
+  }, [])
+
+  return posts
+    ? <PostsList
+        posts={posts}
+        header={<h2 className='d-flex justify-content-between'>
+          {pluralize(count, 'post')}
+          <Button type='primary' ghost>
+            <Link href='/posts/new'>
+              <a>New post</a>
+            </Link>
+          </Button>
+        </h2>}
+      />
+    : <em>Loading posts...</em>;
+}
+
+// export const Posts: NextPage<PostsListProps> = (props) => <PostsList {...props} />
+
+// Posts.getInitialProps = async (props): Promise<any> => {
+//   const postStore = await getPostStore()
+//   const posts = await postStore.get('')
+
+//   if (!posts) {
+//     return return404(props)
+//   }
+
+//   return { 
+//     posts
+//   }
+// }
+
+export default DynamicPosts
