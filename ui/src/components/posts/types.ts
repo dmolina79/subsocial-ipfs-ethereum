@@ -1,10 +1,12 @@
 export type RegularPostContent = {
   title: string,
-  body: string
+  body: string,
+  image?: string
 }
 
 export type PostDto = {
   id: string,
+  spaceId?: string,
   owner: string,
   created: {
     account: string,
