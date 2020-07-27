@@ -4,6 +4,7 @@ import ViewComment from './ViewComment';
 import { CommentDto, CommentsProviderProps } from './types';
 import CommentEditor from './CommentEditor';
 import CommentsProvider, { useGetRootComments, useCommentsContext } from './СommentContext';
+import { pluralize } from '../utils';
 
 type CommentListProps = {
   comments: CommentDto[],
@@ -26,12 +27,12 @@ export const Comments = () => {
   const comments = useGetRootComments()
 
   return <>
-    <h2>{`${totalCommentCount} ${totalCommentCount > 1 ? 'replies' : 'reply'}`}</h2>
+    <h2>{pluralize(totalCommentCount, 'reply', 'replies')}</h2>
     <CommentEditor onCommentAdded={onCommentAdded} />
     <CommentList
       comments={comments}
     />
-  </>
+  </> 
 }
 
 export const CommentsWithProvider = (props: CommentsProviderProps) => <CommentsProvider {...props}><Comments /></CommentsProvider>

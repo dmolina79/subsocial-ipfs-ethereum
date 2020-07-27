@@ -3,6 +3,7 @@ import { Comment, Avatar, Form, Button, Input } from 'antd';
 import { CommentDto, CommentValue } from './types';
 import { useOrbitDbContext } from '../orbitdb';
 import { useCommentsContext } from './СommentContext';
+import Jdenticon from 'react-jdenticon';
 
 const { TextArea } = Input;
 
@@ -13,18 +14,19 @@ type EditorProps = {
   submitting?: boolean
 }
 
-const Editor = ({ onChange, onSubmit, submitting, value = '' }: EditorProps) => (
-  <>
+const Editor = ({ onChange, onSubmit, submitting, value = '' }: EditorProps) => {
+  const { state: { isReady } } = useCommentsContext()
+  return <>
     <Form.Item>
       <TextArea rows={4} onChange={onChange} value={value} />
     </Form.Item>
     <Form.Item>
-      <Button htmlType="submit" loading={submitting} onClick={onSubmit} type="primary">
+      <Button htmlType="submit" loading={submitting || !isReady} disabled={!isReady} onClick={onSubmit} type="primary">
         Add Comment
       </Button>
     </Form.Item>
   </>
-);
+};
 
 type CommentEditorProps = {
   onCommentAdded?: (comment: CommentDto) => void,
@@ -74,10 +76,7 @@ export const CommentEditor = ({ parentId = null, onCommentAdded }: CommentEditor
 
   return <Comment
   avatar={
-    <Avatar
-      src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
-      alt="Han Solo"
-    />
+    <Avatar icon={<Jdenticon value={owner}/>} />
   }
   content={
     <Editor
