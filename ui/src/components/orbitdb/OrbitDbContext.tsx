@@ -5,20 +5,27 @@ import OrbitDB from 'orbit-db'
 import CounterStore from 'orbit-db-counterstore'
 import DocStore from 'orbit-db-docstore'
 import { PostDto } from '../posts/types';
+import { HomeOutlined } from '@ant-design/icons';
+import { PageHeader, Tag } from 'antd';
+import { useRouter } from 'next/router';
+
 const ipfs = IpfsClient('/ip4/127.0.0.1/tcp/5001')
+
+let orbitdb: OrbitDB | undefined = undefined
+let postStore: PostStore | undefined = undefined;
 
 type PostStore = DocStore<PostDto>
 
 type OrbitDb = {
   orbitdb: OrbitDB,
-  postTotalCounter: CounterStore,
+  nextPostId: CounterStore,
   postStore: PostStore,
   owner: string
 }
 
 export const OrbitDbContext = createContext<OrbitDb>({ 
   orbitdb: {} as any,
-  postTotalCounter: {} as any,
+  nextPostId: {} as any,
   postStore: {} as any,
   owner: '' 
 });
@@ -28,6 +35,7 @@ export const useOrbitDbContext = () =>
 
 export const OrbitDbProvider = (props: React.PropsWithChildren<{}>) => {
   const [ orbit, setOrbit ] = useState<OrbitDb>()
+  const router = useRouter()
 
   useEffect(() => {
     async function initOrbitDB() {
@@ -37,7 +45,7 @@ export const OrbitDbProvider = (props: React.PropsWithChildren<{}>) => {
       // Oleh's id:
       // 03c4097f9403cd349a867455fa80272171fbb20a604e8a572aff8d30ac073a0b7b
 
-      const orbitdb = await OrbitDB.createInstance(ipfs)
+      orbitdb = await OrbitDB.createInstance(ipfs)
       // const db = await orbitdb.log('hello2') // this works!
       // console.log(orbitdb)
       const nextPostId = await orbitdb.open('next_post_id', {
@@ -56,7 +64,7 @@ export const OrbitDbProvider = (props: React.PropsWithChildren<{}>) => {
       // const peerId = ''
       // await db.access.grant('write', id2)
 
-      // const postTotalCounter = await orbitdb.create('post_total_counter', 'counter', {
+      // const nextPostId = await orbitdb.create('post_total_counter', 'counter', {
       //   accessController: {
       //     write: [
       //       '*' // Anyone can write
@@ -72,11 +80,11 @@ export const OrbitDbProvider = (props: React.PropsWithChildren<{}>) => {
       // }) as CounterStore
       // database is now ready to be queried
 
-      setOrbit({ orbitdb, postTotalCounter: nextPostId, postStore, owner: orbitdb.id })
+      setOrbit({ orbitdb, nextPostId: nextPostId, postStore, owner: (orbitdb as any).identity.id })
       if (window) {
         (window as any).orbitdb = orbitdb;
         (window as any).postStore = postStore;
-        (window as any).postTotalCounter = nextPostId;
+        (window as any).nextPostId = nextPostId;
         // console.log('HINT: See window.orbitdb and window.db')
       }
     }
@@ -84,15 +92,37 @@ export const OrbitDbProvider = (props: React.PropsWithChildren<{}>) => {
   }, [ false ])
 
   const status = orbit
-    ? <b style={{ color: 'green' }}>READY</b>
-    : <em style={{ color: 'red' }}>Connecting...</em>
+    ? <Tag color="green">READY</Tag>
+    : <Tag color="red">Connecting...</Tag>
 
   return <>
-    <div>OrbitDB: {status}</div>
-    {orbit && <OrbitDbContext.Provider value={orbit}>
-      {props.children}
-    </OrbitDbContext.Provider>}
+    <PageHeader
+      title='OrbitDB'
+      style={{ borderBottom: '1px solid #ddd' }}
+      subTitle={status}
+      onBack={() => router.push('/')}
+      backIcon={<HomeOutlined />}
+    />
+    <div className='PageContent'>
+      {orbit && <OrbitDbContext.Provider value={orbit}>
+        {props.children}
+      </OrbitDbContext.Provider>}
+    </div>
   </>
+}
+
+export const getPostStore = async () => {
+  if (postStore) return postStore;
+
+  if (!orbitdb) {
+    orbitdb = await OrbitDB.createInstance(ipfs)
+  }
+
+  postStore = await orbitdb.docs('posts', { indexBy: 'id' } as any)
+
+  await postStore.load()
+
+  return postStore;
 }
 
 export default OrbitDbProvider
