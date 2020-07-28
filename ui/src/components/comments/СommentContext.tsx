@@ -139,9 +139,9 @@ export const CommentsProvider = ({ postId, children }: React.PropsWithChildren<C
     initAllComments()
 
     return () => {
-      addCommentCount.close()
-      delCommentCount.close()
-      commentStore.close()
+      addCommentCount && addCommentCount.close()
+      delCommentCount && delCommentCount.close()
+      commentStore && commentStore.close()
     }
   }, [ postId ])
 

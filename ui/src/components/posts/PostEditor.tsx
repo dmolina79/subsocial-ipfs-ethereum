@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { Form, Input, Empty, Button } from 'antd'
+import { Form, Input, Empty, Button, notification } from 'antd'
 import { useRouter } from 'next/router'
 import { PostDto, RegularPostContent } from './types'
 import { Space } from '../spaces/types'
 import TextArea from 'antd/lib/input/TextArea'
 import { maxLenError, minLenError } from '../utils'
 import { useOrbitDbContext } from '../orbitdb'
+import { usePostStoreContext } from './PostsContext'
+import { BucketDragDrop } from '../drag-drop'
+import { FormInstance } from 'antd/lib/form'
 
 const TITLE_MIN_LEN = 3
 const TITLE_MAX_LEN = 100
@@ -13,8 +16,8 @@ const TITLE_MAX_LEN = 100
 const BODY_MAX_LEN = 20_000
 
 const layout = {
-  labelCol: { span: 3 },
-  wrapperCol: { span: 21 },
+  labelCol: { span: 4 },
+  wrapperCol: { span: 20 },
 };
 
 type Content = RegularPostContent
@@ -40,13 +43,35 @@ function getInitialValues ({  space, post }: FormProps): FormValues {
   return {}
 }
 
+export const isValidForm = async (form: FormInstance) => {
+  try {
+    await form.validateFields()
+    const isChanged = form.isFieldsTouched()
+    if (!isChanged) {
+      notification.info({
+        message: 'Nothing to update',
+        description: 'Form has not been changed'
+      })
+    }
+    return isChanged
+  } catch (err) {
+    // Form is invalid
+    notification.error({
+      message: 'Form is invalid',
+      description: 'Fix form errors and try again'
+    })
+    return false
+  }
+}
+
 export function InnerForm (props: FormProps) {
   const { space = { id: '1' }, post } = props
   const [ submitting, setSubmitting ] = useState(false)
   const [ form ] = Form.useForm()
   const router = useRouter()
 
-  const { postStore, nextPostId, owner } = useOrbitDbContext()
+  const { owner } = useOrbitDbContext()
+  const { postStore, nextPostId } = usePostStoreContext()
 
   if (!space) return <Empty description='Space not found' />
 
@@ -75,6 +100,10 @@ export function InnerForm (props: FormProps) {
     form.setFieldsValue({ [fieldName('body')]: e.target.value })
   }
 
+  const onImageUpload = (url: string) => {
+    form.setFieldsValue({ [fieldName('image')]: url })
+  }
+
   const addPost = async (content: RegularPostContent) => {
     isNew && await nextPostId.inc()
     const postId = nextPostId.value.toString()
@@ -99,7 +128,12 @@ export function InnerForm (props: FormProps) {
     goToView(postId)
   }
 
-  const onSubmit = () => addPost(fieldValuesToContent())
+  const onSubmit = async () => {
+    const isValid = await isValidForm(form)
+    if (isValid) {
+      addPost(fieldValuesToContent())
+    }
+  }
 
   return <>
     <h2>{editType} post</h2>
@@ -118,17 +152,6 @@ export function InnerForm (props: FormProps) {
       </Form.Item>
 
       <Form.Item
-        name={fieldName('image')}
-        label='Image URL'
-        hasFeedback
-        rules={[
-          { type: 'url', message: 'Should be a valid image URL.' }
-        ]}
-      >
-        <Input type='url' placeholder='Image URL' />
-      </Form.Item>
-
-      <Form.Item
         name={fieldName('body')}
         label='Post'
         hasFeedback
@@ -139,6 +162,18 @@ export function InnerForm (props: FormProps) {
       >
         <TextArea rows={5} onChange={onBodyChanged} />
       </Form.Item>
+
+      <Form.Item
+        name={fieldName('image')}
+        label='Upload image'
+        hasFeedback
+        rules={[
+          { required: true, message: 'Post image is required.' }
+        ]}
+      >
+        <BucketDragDrop onUploadImage={onImageUpload} />
+      </Form.Item>
+
       <div className='RigthButtonGroup'>
         <Button onClick={() => form.resetFields()}>
           Reset form
@@ -175,7 +210,8 @@ function LoadPostThenEdit (props: FormProps) {
   const [ isLoaded, setIsLoaded ] = useState(false)
   const [ post, setPost ] = useState<PostDto>()
 
-  const { postStore, owner: myAddress } = useOrbitDbContext()
+  const { owner: myAddress } = useOrbitDbContext()
+  const { postStore } = usePostStoreContext()
 
   useEffect(() => {
     const loadPost = async () => {

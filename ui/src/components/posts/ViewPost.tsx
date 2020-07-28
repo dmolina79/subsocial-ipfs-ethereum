@@ -1,17 +1,17 @@
 import { List, Avatar, Space, Tooltip, Empty } from 'antd';
 import { MessageOutlined, LikeOutlined, StarOutlined, EditOutlined } from '@ant-design/icons';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, CSSProperties } from 'react';
 import { Comments } from '../comments/Comments';
 import { NextPage } from 'next';
 import Link from 'next/link'
 import { PostDto } from './types';
 import { PostsList } from './Posts';
 import moment from 'moment';
-import { useOrbitDbContext } from '../orbitdb';
-import { toShortAddress, summarize } from '../utils';
+import { toShortAddress, summarize, DfBgImg } from '../utils';
 import Jdenticon from 'react-jdenticon';
 import CommentsProvider, { useCommentsContext } from '../comments/СommentContext';
 import { useRouter } from 'next/router';
+import { usePostStoreContext } from './PostsContext';
 
 type IconTextProps = {
   icon: React.FunctionComponent,
@@ -29,11 +29,24 @@ type ViewPostPreviewProps = {
   post: PostDto
 }
 
+type PostLinkProps = {
+  id: string,
+  children: React.ReactNode,
+  className?: string,
+  style?: CSSProperties
+}
+const PostLink = ({ id, children, className, style }: PostLinkProps) => <Link href='/posts/[postId]' as={`/posts/${id}`} >
+  <a className={className} style={style}>
+    {children}
+  </a>
+</Link>
+
 export const ViewPostPreview = ({ post: { content: { body, title, image }, created, owner, id } }: ViewPostPreviewProps) => {
   const time = moment(created.time)
   const { state: { totalCommentCount } } = useCommentsContext()
   const { query: { postId } } = useRouter()
   const isPreview = !postId
+
 
   return <List.Item
     key={title}
@@ -47,26 +60,30 @@ export const ViewPostPreview = ({ post: { content: { body, title, image }, creat
         </a>
       </Link>
     ]}
-    extra={image
-      ? <img
-        width={272}
-        height={isPreview ? 220 : undefined}
-        src={image}
-      />
+    extra={image && isPreview
+      ? <DfBgImg src={image.replace('original', 'preview')} size={272} height={220} />
       : null
     }
   >
     <List.Item.Meta
       avatar={<Avatar icon={<Jdenticon value={owner}/>} />}
-      title={<Link href='/posts/[postId]' as={`/posts/${id}`} ><a>{title}</a></Link>}
+      title={toShortAddress(owner)}
       description={<span>
-        {`${toShortAddress(owner)} - `}
         <Tooltip title={time.format('YYYY-MM-DD HH:mm:ss')}>
-          <span>{time.fromNow()}</span>
+          <PostLink id={id} style={{ color: '#8c8c8c', fontSize: '.85rem' }}>{time.fromNow()}</PostLink>
         </Tooltip>
       </span>}
     />
-    <div style={{ minHeight: 110 }}>{isPreview ? summarize(body) : body}</div>
+    {isPreview
+      ? <PostLink style={{ color: '#222' }} id={id}>
+        <h2>{title}</h2>
+        <div style={{ minHeight: 80 }}>{summarize(body)}</div>
+      </PostLink>
+      : <div>
+        <h2>{title}</h2>
+        {image && <img src={image} className='PostImage' />}
+        <div>{body}</div>
+      </div>}
   </List.Item>
 }
 
@@ -78,7 +95,7 @@ const ViewPost: NextPage<ViewPostPreviewProps> = ({ post }: ViewPostPreviewProps
 }
 
 export const DynamicPost = () => {
-  const { postStore } = useOrbitDbContext()
+  const { postStore } = usePostStoreContext()
   const [ post, setPost ] = useState<PostDto | undefined>()
   const [ isLoaded, setLoaded ] = useState(false)
   const { query: { postId } } = useRouter()

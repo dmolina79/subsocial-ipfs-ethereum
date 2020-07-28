@@ -2,9 +2,9 @@ import { List, Button } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { ViewPostPreview } from './ViewPost';
 import { PostDto } from './types';
-import { useOrbitDbContext } from '../orbitdb';
 import { pluralize } from '../utils';
 import Link from 'next/link';
+import { usePostStoreContext } from './PostsContext';
 
 type PostsListProps = {
   posts: PostDto[],
@@ -25,7 +25,7 @@ export const PostsList = ({ posts, header }: PostsListProps) => {
 }
 
 const DynamicPosts = () => {
-  const { postStore, nextPostId: { value: count } } = useOrbitDbContext()
+  const { postStore, nextPostId: { value: count } } = usePostStoreContext()
   const [ posts, setPosts ] = useState<PostDto[] | undefined>()
 
   useEffect(() => {
