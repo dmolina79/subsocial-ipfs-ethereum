@@ -1,0 +1,12 @@
+{
+  "name": "creadit",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:dappforce/hackfs.git",
+  "author": "Alex Siman <aleksandr.siman@gmail.com>",
+  "license": "GPL-3.0-only",
+  "private": false,
+  "dependencies": {
+    "@openzeppelin/contracts": "^2.4.0"
+  }
+}
