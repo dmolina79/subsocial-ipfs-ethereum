@@ -58,8 +58,6 @@ export const BucketDragDrop = ({ onUpload, accept }: BucketDragDropProps) => {
       maxHeight: 400
     }
 
-    console.log(file)
-
     const [ typeContent, format ] = file.type.split('/')
 
     const fileStream = await file.text()
@@ -70,7 +68,6 @@ export const BucketDragDrop = ({ onUpload, accept }: BucketDragDropProps) => {
     if (typeContent === 'image') {
       await processAndStore(file, path, `preview.${format}`, preview)
     }
-    console.log(originalPath)
 
     onUpload(originalPath)
   }

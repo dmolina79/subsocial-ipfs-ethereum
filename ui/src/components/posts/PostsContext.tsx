@@ -4,12 +4,17 @@ import CounterStore from 'orbit-db-counterstore'
 import DocStore from 'orbit-db-docstore'
 import { PostDto } from '../posts/types';
 import { useOrbitDbContext } from '../orbitdb';
+import { useRouter } from 'next/router';
 
 type PostStore = DocStore<PostDto>
 
 type PostStoreContextType = {
   nextPostId: CounterStore,
   postStore: PostStore,
+}
+
+type PostProviderProps = {
+  spaceId: string
 }
 
 export const PostStoreContext = createContext<PostStoreContextType>({ 
@@ -20,47 +25,26 @@ export const PostStoreContext = createContext<PostStoreContextType>({
 export const usePostStoreContext = () =>
   useContext(PostStoreContext)
 
-export const PostStoreProvider = (props: React.PropsWithChildren<{}>) => {
+export const PostStoreProvider = ({ spaceId, children }: React.PropsWithChildren<PostProviderProps>) => {
   const [ state, setState ] = useState<PostStoreContextType>()
   const { orbitdb } = useOrbitDbContext()
 
   useEffect(() => {
     async function init() {
-      // const db = await orbitdb.log('hello2') // this works!
-      // console.log(orbitdb)
-      const nextPostId = await orbitdb.open('next_post_id', {
+
+      const nextPostId = await orbitdb.open(`next_post_id_by_space_${spaceId}`, {
         create: true,
         type: 'counter',
         replicate: true
-        // overwrite (boolean): Overwrite an existing database (Default: false)
-        // replicate (boolean): Replicate the database with peers, requires IPFS PubSub. (Default: true)
       }) as CounterStore
 
       await nextPostId.load()
 
-      const postStore: PostStore = await orbitdb.docs('posts', { indexBy: 'id' } as any)
+      const postStore: PostStore = await orbitdb.docs(`space/${spaceId}/posts`, { indexBy: 'id' } as any)
 
       await postStore.load()
 
       setState({ postStore, nextPostId })
-      // const peerId = ''
-      // await db.access.grant('write', id2)
-
-      // const nextPostId = await orbitdb.create('post_total_counter', 'counter', {
-      //   accessController: {
-      //     write: [
-      //       '*' // Anyone can write
-      //       // Give access to ourselves
-      //       // orbitdb.identity.id,
-      //       // Give access to the second peer
-      //       // peerId
-      //     ]
-      //   },
-      //   // overwrite: true,
-      //   // replicate: false,
-      //   // meta: { hello: 'meta hello' }
-      // }) as CounterStore
-      // database is now ready to be queried
 
       if (window) {
         (window as any).postStore = postStore;
@@ -68,29 +52,25 @@ export const PostStoreProvider = (props: React.PropsWithChildren<{}>) => {
       }
     }
     init()
-  }, [ false ])
+  }, [ spaceId ])
 
   return state
     ? <PostStoreContext.Provider
         value={state}>
-          {props.children}
+          {children}
       </PostStoreContext.Provider>
     : null
   }
 
 export default PostStoreProvider
 
+export const withPostStoreProvider = (Component: React.ComponentType<any>) => {
 
-// export const getPostStore = async () => {
-//   if (postStore) return postStore;
+  return () => {
+    const { spaceId } = useRouter().query
 
-//   if (!orbitdb) {
-//     orbitdb = await OrbitDB.createInstance(ipfs)
-//   }
+    if (!spaceId) return null;
 
-//   postStore = await orbitdb.docs('posts', { indexBy: 'id' } as any)
-
-//   await postStore.load()
-
-//   return postStore;
-// }
+    return <PostStoreProvider spaceId={spaceId as string}><Component spaceId={spaceId} /></PostStoreProvider>
+  }
+}

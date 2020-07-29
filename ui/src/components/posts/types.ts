@@ -29,7 +29,7 @@ export type PostContent = ArticlePostContent | StatusPostContent | ImagePostCont
 
 export type PostDto = {
   id: string,
-  spaceId?: string,
+  spaceId: string,
   owner: string,
   created: {
     account: string,

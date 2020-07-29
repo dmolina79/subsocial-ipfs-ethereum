@@ -2,20 +2,16 @@ import React, { useState, useEffect } from 'react'
 import { Form, Input, Empty, Button, notification, Tabs } from 'antd'
 import { useRouter } from 'next/router'
 import { PostDto, PostContent, AllValues } from './types'
-import { Space } from '../spaces/types'
+import { SpaceDto } from '../spaces/types'
 import TextArea from 'antd/lib/input/TextArea'
-import { maxLenError, minLenError } from '../utils'
+import { maxLenError, minLenError, TITLE_MIN_LEN, TITLE_MAX_LEN, DESC_MAX_LEN } from '../utils'
 import { useOrbitDbContext } from '../orbitdb'
-import { usePostStoreContext } from './PostsContext'
+import { usePostStoreContext, withPostStoreProvider } from './PostsContext'
 import { BucketDragDrop } from '../drag-drop'
 import { FormInstance } from 'antd/lib/form'
+import { withLoadSpaceFromUrl } from '../spaces/ViewSpace'
 
 const { TabPane } = Tabs;
-
-const TITLE_MIN_LEN = 3
-const TITLE_MAX_LEN = 100
-
-const BODY_MAX_LEN = 20_000
 
 const layout = {
   labelCol: { span: 4 },
@@ -34,7 +30,7 @@ const fieldName = (name: FieldName): FieldName => name
 
 type FormProps ={
   post?: PostDto,
-  space?: Space,
+  space: SpaceDto,
   isTitle?: boolean,
   isImg?: boolean,
   isVideo?: boolean
@@ -70,7 +66,7 @@ export const isValidForm = async (form: FormInstance) => {
 }
 
 export function InnerForm (props: FormProps) {
-  const { space = { id: '1' }, post, isTitle, isImg, isVideo } = props
+  const { space, post, isTitle, isImg, isVideo } = props
   const [ submitting, setSubmitting ] = useState(false)
   const [ form ] = Form.useForm()
   const router = useRouter()
@@ -96,7 +92,7 @@ export function InnerForm (props: FormProps) {
   }
 
   const goToView = (postId: string) => {
-    router.push('/posts/[postId]', `/posts/${postId}`)
+    router.push('/spaces/[spaceId]/posts/[postId]', `/spaces/${spaceId}/posts/${postId}`)
       .catch(err => console.error(`Failed to redirect to a post page. ${err}`))
   }
 
@@ -113,7 +109,6 @@ export function InnerForm (props: FormProps) {
   }
 
   const onVideoUpload = (url: string) => {
-    console.log(url)
     onUpload(url, 'video')
   }
 
@@ -170,7 +165,7 @@ export function InnerForm (props: FormProps) {
         hasFeedback
         rules={[
           { required: true, message: 'Post body is required.' },
-          { max: BODY_MAX_LEN, message: maxLenError('Post body', BODY_MAX_LEN) }
+          { max: DESC_MAX_LEN, message: maxLenError('Post body', DESC_MAX_LEN) }
         ]}
       >
         <TextArea rows={5} onChange={onBodyChanged} />
@@ -211,24 +206,6 @@ export function InnerForm (props: FormProps) {
   </>
 }
 
-// export function withLoadSpaceFromUrl<Props> (
-//   Component: React.ComponentType<Props>
-// ) {
-//   return function (props: Props): React.ReactElement<Props> {
-
-//     const id = useRouter().query.spaceId as string
-//     const [ isLoaded, setIsLoaded ] = useState(false)
-//     const [ loadedData, setLoadedData ] = useState({})
-
-//     if (!isLoaded) return <Loading label='Loading the space...' />
-
-//     const { space } = loadedData
-//     if (!space) return <NoData description='Space not found' />
-
-//     return <Component {...props} space={space} />
-//   }
-// }
-
 function LoadPostThenEdit (props: FormProps) {
   const { postId } = useRouter().query
   const [ isLoaded, setIsLoaded ] = useState(false)
@@ -258,25 +235,25 @@ function LoadPostThenEdit (props: FormProps) {
   return <InnerForm {...props} post={post} isTitle={!!title} isImg={!!image} isVideo={!!video} />
 }
 
-export const NewPost = () => {
+export const NewPost = withLoadSpaceFromUrl((props) => {
   return (
     <Tabs defaultActiveKey="status" type="card" size='large'>
       <TabPane tab="Status" key="status">
-        <InnerForm />
+        <InnerForm {...props} />
       </TabPane>
       <TabPane tab="Article" key="article">
-        <InnerForm isTitle />
+        <InnerForm {...props} isTitle />
       </TabPane>
       <TabPane tab="Image" key="image">
-        <InnerForm isImg />
+        <InnerForm {...props} isImg />
       </TabPane>
       <TabPane tab="Video" key="video">
-        <InnerForm isVideo isTitle />
+        <InnerForm {...props} isVideo isTitle />
       </TabPane>
     </Tabs>
 );
-}
+})
 
-export const EditPost = LoadPostThenEdit
+export const EditPost = withPostStoreProvider(withLoadSpaceFromUrl(LoadPostThenEdit))
 
-export default NewPost
+export default withPostStoreProvider(withLoadSpaceFromUrl(NewPost))

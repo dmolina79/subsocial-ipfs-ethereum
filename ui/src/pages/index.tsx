@@ -1,3 +1,3 @@
-import Posts from '../components/posts/Posts'
+import Spaces from '../components/spaces/Spaces'
 
-export default Posts
+export default Spaces

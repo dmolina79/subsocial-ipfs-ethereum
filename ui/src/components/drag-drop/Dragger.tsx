@@ -23,7 +23,6 @@ export const DragDrop = ({ onChange, accept,  ...props}: DragDropProps) => {
         }
         if (status === 'done') {
           message.success(`${info.file.name} file uploaded successfully.`);
-          console.log(info, info.file.originFileObj)
           onChange && info.file.originFileObj && onChange(info.file.originFileObj)
         } else if (status === 'error') {
           message.error(`${info.file.name} file upload failed.`);

@@ -1,4 +1,4 @@
-import { List, Avatar, Space, Tooltip, Empty } from 'antd';
+import { List, Avatar, Tooltip, Empty } from 'antd';
 import { MessageOutlined, LikeOutlined, StarOutlined, EditOutlined } from '@ant-design/icons';
 import React, { useState, useEffect, CSSProperties } from 'react';
 import { Comments } from '../comments/Comments';
@@ -7,25 +7,12 @@ import Link from 'next/link'
 import { PostDto } from './types';
 import { PostsList } from './Posts';
 import moment from 'moment';
-import { toShortAddress, summarize, DfBgImg } from '../utils';
+import { toShortAddress, summarize, DfBgImg, IconText } from '../utils';
 import Jdenticon from 'react-jdenticon';
 import CommentsProvider, { useCommentsContext } from '../comments/СommentContext';
 import { useRouter } from 'next/router';
-import { usePostStoreContext } from './PostsContext';
+import { usePostStoreContext, withPostStoreProvider } from './PostsContext';
 import { Player } from './DPlayer';
-
-
-type IconTextProps = {
-  icon: React.FunctionComponent,
-  text: React.ReactNode
-}
-
-const IconText = ({ icon, text }: IconTextProps) => (
-  <Space>
-    {React.createElement(icon)}
-    {text}
-  </Space>
-);
 
 type ViewPostProps = {
   post: PostDto
@@ -33,22 +20,26 @@ type ViewPostProps = {
 
 type PostLinkProps = {
   id: string,
+  spaceId: string,
   children: React.ReactNode,
   className?: string,
   style?: CSSProperties
 }
-const PostLink = ({ id, children, className, style }: PostLinkProps) => <Link href='/posts/[postId]' as={`/posts/${id}`} >
-  <a className={className} style={style}>
-    {children}
-  </a>
-</Link>
+const PostLink = ({ id, spaceId, children, className, style }: PostLinkProps) => <Link
+    href='/spaces/[spaceId]/posts/[postId]'
+    as={`/spaces/${spaceId}posts/${id}`}
+  >
+    <a className={className} style={style}>
+      {children}
+    </a>
+  </Link>
 
 type InnerViewPostProps = ViewPostProps & {
   preview?: React.ReactNode,
   children?: React.ReactNode
 }
 
-export const InnerViewPost = ({ post: { created, owner, id }, preview, children }: InnerViewPostProps) => {
+export const InnerViewPost = ({ post: { created, owner, id, spaceId }, preview, children }: InnerViewPostProps) => {
   const time = moment(created.time)
   const { state: { totalCommentCount } } = useCommentsContext()
 
@@ -71,7 +62,7 @@ export const InnerViewPost = ({ post: { created, owner, id }, preview, children 
       title={toShortAddress(owner)}
       description={<span>
         <Tooltip title={time.format('YYYY-MM-DD HH:mm:ss')}>
-          <PostLink id={id} style={{ color: '#8c8c8c', fontSize: '.85rem' }}>{time.fromNow()}</PostLink>
+          <PostLink id={id} spaceId={spaceId} style={{ color: '#8c8c8c', fontSize: '.85rem' }}>{time.fromNow()}</PostLink>
         </Tooltip>
       </span>}
       style={{ marginBottom: '0' }}
@@ -102,13 +93,13 @@ export const ViewPostPage = ({ post }: ViewPostProps) => {
 }
 
 export const ViewPostPreview = ({ post }: ViewPostProps) => {
-  const { content: { body, title, image }, id } = post
+  const { content: { body, title, image }, id, spaceId } = post
 
   const previewUrl = image?.replace('original', 'preview')
   const Title = () => title ? <h2>{title}</h2> : null
 
   return <InnerViewPost post={post} preview={previewUrl ? <DfBgImg src={previewUrl} size={272} height={220} /> : null}>
-    <PostLink style={{ color: '#222' }} id={id}>
+    <PostLink style={{ color: '#222' }} id={id} spaceId={spaceId}>
       <Title />
       <div style={{ minHeight: 80 }}>{summarize(body)}</div>
     </PostLink>
@@ -156,4 +147,4 @@ export const DynamicPost = () => {
     : <Empty description='Post not found' />
 }
 
-export default DynamicPost
+export default withPostStoreProvider(DynamicPost)

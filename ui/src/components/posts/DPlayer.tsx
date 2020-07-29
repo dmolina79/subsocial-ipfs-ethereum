@@ -31,7 +31,6 @@ export function Player (props: PlayerProps) {
   const [player, setPlayer] = useState<PartOfPlayer>();
 
   const onPlayerCreated = (newPlayer: PartOfPlayer) => {
-    console.log('onPlayerCreated:', newPlayer);
     setPlayer(newPlayer);
   };
 
