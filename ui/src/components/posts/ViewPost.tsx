@@ -12,6 +12,8 @@ import Jdenticon from 'react-jdenticon';
 import CommentsProvider, { useCommentsContext } from '../comments/СommentContext';
 import { useRouter } from 'next/router';
 import { usePostStoreContext } from './PostsContext';
+import { Player } from './DPlayer';
+
 
 type IconTextProps = {
   icon: React.FunctionComponent,
@@ -25,7 +27,7 @@ const IconText = ({ icon, text }: IconTextProps) => (
   </Space>
 );
 
-type ViewPostPreviewProps = {
+type ViewPostProps = {
   post: PostDto
 }
 
@@ -41,15 +43,17 @@ const PostLink = ({ id, children, className, style }: PostLinkProps) => <Link hr
   </a>
 </Link>
 
-export const ViewPostPreview = ({ post: { content: { body, title, image }, created, owner, id } }: ViewPostPreviewProps) => {
+type InnerViewPostProps = ViewPostProps & {
+  preview?: React.ReactNode,
+  children?: React.ReactNode
+}
+
+export const InnerViewPost = ({ post: { created, owner, id }, preview, children }: InnerViewPostProps) => {
   const time = moment(created.time)
   const { state: { totalCommentCount } } = useCommentsContext()
-  const { query: { postId } } = useRouter()
-  const isPreview = !postId
-
 
   return <List.Item
-    key={title}
+    key={created.time}
     actions={[
       <IconText icon={StarOutlined} text="156" key="list-vertical-star-o" />,
       <IconText icon={LikeOutlined} text="156" key="list-vertical-like-o" />,
@@ -60,10 +64,7 @@ export const ViewPostPreview = ({ post: { content: { body, title, image }, creat
         </a>
       </Link>
     ]}
-    extra={image && isPreview
-      ? <DfBgImg src={image.replace('original', 'preview')} size={272} height={220} />
-      : null
-    }
+    extra={preview}
   >
     <List.Item.Meta
       avatar={<Avatar icon={<Jdenticon value={owner}/>} />}
@@ -73,21 +74,58 @@ export const ViewPostPreview = ({ post: { content: { body, title, image }, creat
           <PostLink id={id} style={{ color: '#8c8c8c', fontSize: '.85rem' }}>{time.fromNow()}</PostLink>
         </Tooltip>
       </span>}
+      style={{ marginBottom: '0' }}
     />
-    {isPreview
-      ? <PostLink style={{ color: '#222' }} id={id}>
-        <h2>{title}</h2>
-        <div style={{ minHeight: 80 }}>{summarize(body)}</div>
-      </PostLink>
-      : <div>
-        <h2>{title}</h2>
-        {image && <img src={image} className='PostImage' />}
-        <div>{body}</div>
-      </div>}
+    {children}
   </List.Item>
 }
 
-const ViewPost: NextPage<ViewPostPreviewProps> = ({ post }: ViewPostPreviewProps) => {
+export const ViewPostPage = ({ post }: ViewPostProps) => {
+  const { content: { body, title, image, video } } = post
+  const previewUrl = image?.replace('original', 'preview')
+
+  const Title = () => title ? <h2 className='mb-2'>{title}</h2> : null
+
+  const Media = () => video
+    ? <Player
+      video={{ url: video, name: title || '', pic: previewUrl || '' }}
+    />
+    : <img src={image} className='PostImage' /> || null
+
+  return <InnerViewPost post={post}>
+    <div className='card'>
+        <Title />
+        <Media />
+        <div className='mt-2'>{body}</div>
+    </div>
+  </InnerViewPost>
+}
+
+export const ViewPostPreview = ({ post }: ViewPostProps) => {
+  const { content: { body, title, image }, id } = post
+
+  const previewUrl = image?.replace('original', 'preview')
+  const Title = () => title ? <h2>{title}</h2> : null
+
+  return <InnerViewPost post={post} preview={previewUrl ? <DfBgImg src={previewUrl} size={272} height={220} /> : null}>
+    <PostLink style={{ color: '#222' }} id={id}>
+      <Title />
+      <div style={{ minHeight: 80 }}>{summarize(body)}</div>
+    </PostLink>
+</InnerViewPost>
+}
+
+export const ViewPost = ({ post }: ViewPostProps) => {
+  const { query: { postId } } = useRouter()
+  
+  const isPreview = !postId
+
+  return isPreview
+    ? <ViewPostPreview post={post} />
+    : <ViewPostPage post={post} />
+}
+
+const PostPage: NextPage<ViewPostProps> = ({ post }: ViewPostProps) => {
   return <div className='PostPage'>
     <PostsList posts={[ post ]} />
     <Comments />
@@ -102,7 +140,7 @@ export const DynamicPost = () => {
 
   useEffect(() => {
     const loadPosts = async () => {
-      const post = await postStore.get('').pop()
+      const post = await postStore.get(postId).pop()
       post && setPost(post)
       setLoaded(true)
     }
@@ -113,7 +151,7 @@ export const DynamicPost = () => {
 
   return post
     ? <CommentsProvider postId={postId as string}>
-        <ViewPost post={post} />
+        <PostPage post={post} />
       </CommentsProvider>
     : <Empty description='Post not found' />
 }
