@@ -3,8 +3,9 @@ import App from 'next/app'
 import Head from 'next/head'
 
 import { OrbitDbProvider } from '../components/orbitdb'
-import { PostStoreProvider } from '../components/posts/PostsContext'
+import { SpaceStoreProvider } from '../components/spaces/SpaceContext'
 import { BucketProvider } from '../components/buckets/BucketsContext'
+import PageLayout from '../layout/PageLayout'
 
 import 'antd/dist/antd.css'
 import '../styles/main.less'
@@ -20,9 +21,11 @@ function MyApp (props) {
       </Head>
       <OrbitDbProvider>
         <BucketProvider>
-          <PostStoreProvider>
-            <Component {...pageProps} />
-          </PostStoreProvider>
+          <PageLayout >
+            <SpaceStoreProvider>
+              <Component {...pageProps} />
+            </SpaceStoreProvider>
+          </PageLayout>
         </BucketProvider>
       </OrbitDbProvider>
     </>

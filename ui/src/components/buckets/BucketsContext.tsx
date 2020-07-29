@@ -5,14 +5,18 @@ import { Libp2pCryptoIdentity } from '@textile/threads-core';
 type BucketContextType = {
   buckets: Buckets,
   bucketKey: string,
-  rootPath: string
+  rootPath: string,
+  isReady: boolean
 }
 
-export const BucketContext = createContext<BucketContextType>({ 
+const initialState = { 
   buckets: {} as any,
   bucketKey: '',
-  rootPath: ''
-});
+  rootPath: '',
+  isReady: false
+}
+
+export const BucketContext = createContext<BucketContextType>(initialState);
 
 const keyInfo: KeyInfo = {
   key: 'bzk26ksazqot2cfezr5kp7vg7r4',
@@ -25,6 +29,7 @@ export const BucketProvider = (props: React.PropsWithChildren<{}>) => {
   const [ buckets, setBuckets ] = useState<Buckets>()
   const [ bucketKey, setBucketKey ] = useState('')
   const [ rootPath, setUrl ] = useState<string>()
+  const [ isReady, setReady ] = useState(false)
   /**
    * getIdentity uses a basic private key identity.
    * The user's identity will be cached client side. This is long
@@ -101,11 +106,11 @@ export const BucketProvider = (props: React.PropsWithChildren<{}>) => {
 
         const links = await getBucketLinks(buckets, bucketKey);
 
-        console.log(links)
         links && setUrl(links?.url)
 
       }
 
+      setReady(true)
     }
 
     init()
@@ -115,15 +120,16 @@ export const BucketProvider = (props: React.PropsWithChildren<{}>) => {
   const state = rootPath && buckets ? {
     buckets,
     bucketKey,
-    rootPath
+    rootPath,
+    isReady
   } : undefined
   useEffect(() => {
 
   }, [ false ])
 
-  return state ? <BucketContext.Provider value={state}>
+  return <BucketContext.Provider value={state || initialState}>
     {props.children}
-  </BucketContext.Provider> : null
+  </BucketContext.Provider>
 }
 
 export default BucketProvider
