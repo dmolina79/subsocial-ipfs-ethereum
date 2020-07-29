@@ -4,7 +4,7 @@ export type CommentDto = {
   owner: string,
   created: {
     account: string,
-    time: string
+    time: number
   }
   parentId?: string | null
 }

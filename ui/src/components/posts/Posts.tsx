@@ -1,6 +1,6 @@
 import { List, Button } from 'antd';
 import React, { useEffect, useState } from 'react';
-import { ViewPostPreview } from './ViewPost';
+import { ViewPost } from './ViewPost';
 import { PostDto } from './types';
 import { pluralize } from '../utils';
 import Link from 'next/link';
@@ -19,7 +19,7 @@ export const PostsList = ({ posts, header }: PostsListProps) => {
       itemLayout='vertical'
       header={header}
       dataSource={posts}
-      renderItem={post => <ViewPostPreview post={post} />}
+      renderItem={post => <ViewPost post={post} />}
     />
     : <em>Loading posts...</em>;
 }

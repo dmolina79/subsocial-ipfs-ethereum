@@ -3,14 +3,15 @@ import { useBucketContext } from '../buckets/BucketsContext';
 import { PushPathResult } from '@textile/hub'
 // @ts-ignore
 import { readAndCompressImage } from 'browser-image-resizer'
-import { DragDrop } from './Dragger';
+import { DragDrop, Accept } from './Dragger';
 const Hash = require('ipfs-only-hash')
 
 type BucketDragDropProps = {
-  onUploadImage: (url: string) => void
+  onUpload: (url: string) => void,
+  accept: Accept
 }
 
-export const BucketDragDrop = ({ onUploadImage }: BucketDragDropProps) => {
+export const BucketDragDrop = ({ onUpload, accept }: BucketDragDropProps) => {
   const { buckets, bucketKey, rootPath } = useBucketContext()
 
     /**
@@ -53,20 +54,26 @@ export const BucketDragDrop = ({ onUploadImage }: BucketDragDropProps) => {
 
   const onDrop = async (file: File | Blob) => {
     const preview = {
-      maxWidth: 272,
-      maxHeight: 220
+      maxWidth: 800,
+      maxHeight: 400
     }
 
-    const type = file.type.split('/').pop()
+    console.log(file)
+
+    const [ typeContent, format ] = file.type.split('/')
 
     const fileStream = await file.text()
     const cid = await Hash.of(fileStream)
 
-    const path = `images/${cid}`
-    const originalPath = await processAndStore(file, path, `original.${type}`)
-    await processAndStore(file, path, `preview.${type}`, preview)
-    onUploadImage(originalPath)
+    const path = `${typeContent}s/${cid}`
+    const originalPath = await processAndStore(file, path, `original.${format}`)
+    if (typeContent === 'image') {
+      await processAndStore(file, path, `preview.${format}`, preview)
+    }
+    console.log(originalPath)
+
+    onUpload(originalPath)
   }
 
-  return <DragDrop onChange={onDrop} />
+  return <DragDrop onChange={onDrop} accept={accept} />
 }

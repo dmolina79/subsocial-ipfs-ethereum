@@ -25,6 +25,7 @@
     "orbit-db": "^0.24.2",
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
+    "react-dplayer": "^0.4.1",
     "react-jdenticon": "^0.0.8",
     "secp256k1": "3.8.0"
   },

@@ -46,7 +46,7 @@ export const CommentEditor = ({ parentId = null, onCommentAdded }: CommentEditor
       body: body?.trim(),
       created: {
         account: owner,
-        time: new Date().toUTCString()
+        time: new Date().getTime()
       },
       parentId
     }

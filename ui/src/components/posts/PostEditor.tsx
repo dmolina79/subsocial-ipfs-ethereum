@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Form, Input, Empty, Button, notification } from 'antd'
+import { Form, Input, Empty, Button, notification, Tabs } from 'antd'
 import { useRouter } from 'next/router'
-import { PostDto, RegularPostContent } from './types'
+import { PostDto, PostContent, AllValues } from './types'
 import { Space } from '../spaces/types'
 import TextArea from 'antd/lib/input/TextArea'
 import { maxLenError, minLenError } from '../utils'
@@ -9,6 +9,8 @@ import { useOrbitDbContext } from '../orbitdb'
 import { usePostStoreContext } from './PostsContext'
 import { BucketDragDrop } from '../drag-drop'
 import { FormInstance } from 'antd/lib/form'
+
+const { TabPane } = Tabs;
 
 const TITLE_MIN_LEN = 3
 const TITLE_MAX_LEN = 100
@@ -20,9 +22,9 @@ const layout = {
   wrapperCol: { span: 20 },
 };
 
-type Content = RegularPostContent
+type Content = PostContent
 
-type FormValues = Partial<Content> & {
+type FormValues = AllValues & {
   spaceId?: string
 }
 
@@ -32,7 +34,10 @@ const fieldName = (name: FieldName): FieldName => name
 
 type FormProps ={
   post?: PostDto,
-  space?: Space
+  space?: Space,
+  isTitle?: boolean,
+  isImg?: boolean,
+  isVideo?: boolean
 }
 
 function getInitialValues ({  space, post }: FormProps): FormValues {
@@ -65,7 +70,7 @@ export const isValidForm = async (form: FormInstance) => {
 }
 
 export function InnerForm (props: FormProps) {
-  const { space = { id: '1' }, post } = props
+  const { space = { id: '1' }, post, isTitle, isImg, isVideo } = props
   const [ submitting, setSubmitting ] = useState(false)
   const [ form ] = Form.useForm()
   const router = useRouter()
@@ -87,8 +92,7 @@ export function InnerForm (props: FormProps) {
   }
 
   const fieldValuesToContent = (): Content => {
-    const { title, body, image = null } = getFieldValues()
-    return { title, body, image } as Content
+    return getFieldValues() as Content
   }
 
   const goToView = (postId: string) => {
@@ -100,11 +104,20 @@ export function InnerForm (props: FormProps) {
     form.setFieldsValue({ [fieldName('body')]: e.target.value })
   }
 
-  const onImageUpload = (url: string) => {
-    form.setFieldsValue({ [fieldName('image')]: url })
+  const onUpload = (url: string, name: 'image' | 'video') => {
+    form.setFieldsValue({ [fieldName(name)]: url })
   }
 
-  const addPost = async (content: RegularPostContent) => {
+  const onImageUpload = (url: string) => {
+    onUpload(url, 'image')
+  }
+
+  const onVideoUpload = (url: string) => {
+    console.log(url)
+    onUpload(url, 'video')
+  }
+
+  const addPost = async (content: PostContent) => {
     isNew && await nextPostId.inc()
     const postId = nextPostId.value.toString()
 
@@ -114,7 +127,7 @@ export function InnerForm (props: FormProps) {
       owner,
       created: {
         account: owner,
-        time: new Date().toUTCString()
+        time: new Date().getTime()
       },
       content: content
     }
@@ -138,7 +151,7 @@ export function InnerForm (props: FormProps) {
   return <>
     <h2>{editType} post</h2>
     <Form form={form} initialValues={initialValues} {...layout}>
-      <Form.Item
+      {isTitle && <Form.Item
         name={fieldName('title')}
         label='Post title'
         hasFeedback
@@ -149,7 +162,7 @@ export function InnerForm (props: FormProps) {
         ]}
       >
         <Input placeholder='Optional: A title of your post' />
-      </Form.Item>
+      </Form.Item>}
 
       <Form.Item
         name={fieldName('body')}
@@ -163,16 +176,27 @@ export function InnerForm (props: FormProps) {
         <TextArea rows={5} onChange={onBodyChanged} />
       </Form.Item>
 
-      <Form.Item
+      {(isImg || isVideo) && <Form.Item
         name={fieldName('image')}
-        label='Upload image'
+        label={isVideo ? 'Preview' : 'Image'}
         hasFeedback
         rules={[
           { required: true, message: 'Post image is required.' }
         ]}
       >
-        <BucketDragDrop onUploadImage={onImageUpload} />
-      </Form.Item>
+        <BucketDragDrop onUpload={onImageUpload} accept='image' />
+      </Form.Item>}
+
+      {isVideo && <Form.Item
+        name={fieldName('video')}
+        label='Video'
+        hasFeedback
+        rules={[
+          { required: true, message: 'Post video is required.' }
+        ]}
+      >
+        <BucketDragDrop onUpload={onVideoUpload} accept='video' />
+      </Form.Item>}
 
       <div className='RigthButtonGroup'>
         <Button onClick={() => form.resetFields()}>
@@ -229,11 +253,30 @@ function LoadPostThenEdit (props: FormProps) {
   const isOwner = myAddress === post.owner
   if (!isOwner) return <Empty description='You do not have permission to edit this post' />
 
-  return <InnerForm {...props} post={post} />
+  const { content: { title, image, video } } = post
+
+  return <InnerForm {...props} post={post} isTitle={!!title} isImg={!!image} isVideo={!!video} />
+}
+
+export const NewPost = () => {
+  return (
+    <Tabs defaultActiveKey="status" type="card" size='large'>
+      <TabPane tab="Status" key="status">
+        <InnerForm />
+      </TabPane>
+      <TabPane tab="Article" key="article">
+        <InnerForm isTitle />
+      </TabPane>
+      <TabPane tab="Image" key="image">
+        <InnerForm isImg />
+      </TabPane>
+      <TabPane tab="Video" key="video">
+        <InnerForm isVideo isTitle />
+      </TabPane>
+    </Tabs>
+);
 }
 
 export const EditPost = LoadPostThenEdit
-
-export const NewPost = InnerForm
 
 export default NewPost

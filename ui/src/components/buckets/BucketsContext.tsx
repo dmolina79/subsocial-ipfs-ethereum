@@ -100,6 +100,8 @@ export const BucketProvider = (props: React.PropsWithChildren<{}>) => {
         setBucketKey(bucketKey);
 
         const links = await getBucketLinks(buckets, bucketKey);
+
+        console.log(links)
         links && setUrl(links?.url)
 
       }
