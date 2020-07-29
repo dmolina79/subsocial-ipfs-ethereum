@@ -57,7 +57,7 @@ type Props = {
 };
 
 export function DfBgImg (props: Props) {
-  const { src, size, height = size, width = size, rounded = false, className, style } = props;
+  const { src, size, height = size, width = size, rounded = false, className = '', style } = props;
 
   const fullClass = 'DfBgImg ' + className;
 
@@ -67,7 +67,8 @@ export function DfBgImg (props: Props) {
     height: height,
     minWidth: width,
     minHeight: height,
-    borderRadius: rounded ? '50%' : '0'
+    borderRadius: rounded ? '50%' : '0',
+    backgroundSize: 'cover'
   }, style);
 
   return <div className={fullClass} style={fullStyle} />;
