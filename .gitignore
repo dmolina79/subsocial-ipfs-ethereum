@@ -1,3 +1,6 @@
+ui/src/contracts
+.DS_Store
+
 # Logs
 logs
 *.log
