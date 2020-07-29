@@ -5,6 +5,7 @@ import Head from 'next/head'
 import { OrbitDbProvider } from '../components/orbitdb'
 import { PostStoreProvider } from '../components/posts/PostsContext'
 import { BucketProvider } from '../components/buckets/BucketsContext'
+import { EthereumProvider } from '../components/eth/EthereumProvider'
 
 import 'antd/dist/antd.css'
 import '../styles/main.less'
@@ -21,7 +22,9 @@ function MyApp (props) {
       <OrbitDbProvider>
         <BucketProvider>
           <PostStoreProvider>
-            <Component {...pageProps} />
+            <EthereumProvider>
+              <Component {...pageProps} />
+            </EthereumProvider>
           </PostStoreProvider>
         </BucketProvider>
       </OrbitDbProvider>

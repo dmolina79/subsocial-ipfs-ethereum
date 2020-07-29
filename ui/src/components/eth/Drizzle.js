@@ -1,9 +1,18 @@
 import React from "react";
+import { drizzleReactHooks } from '@drizzle/react-plugin'
 import { newContextComponents } from "@drizzle/react-components";
+import { Loading } from "../utils";
 
+const { useDrizzle, useDrizzleState } = drizzleReactHooks
 const { AccountData, ContractData, ContractForm } = newContextComponents;
 
-export default ({ drizzle, drizzleState }) => {
+export default () => {
+  const { drizzle } = useDrizzle()
+  const drizzleState = useDrizzleState(state => state)
+  const initialized = drizzleState.drizzleStatus.initialized
+
+  if (!initialized) return <Loading message='Connecting to Ethereum...' />
+
   // destructure drizzle and drizzleState from props
   return (
     <div>
