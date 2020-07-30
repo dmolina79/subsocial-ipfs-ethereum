@@ -11,7 +11,7 @@ import { toShortAddress, summarize, DfBgImg, IconText } from '../utils';
 import Jdenticon from 'react-jdenticon';
 import CommentsProvider, { useCommentsContext } from '../comments/СommentContext';
 import { useRouter } from 'next/router';
-import { usePostStoreContext, withPostStoreProvider } from './PostsContext';
+import { usePostStoreContext } from './PostsContext';
 import { Player } from './DPlayer';
 
 type ViewPostProps = {
@@ -101,7 +101,7 @@ export const ViewPostPreview = ({ post }: ViewPostProps) => {
   return <InnerViewPost post={post} preview={previewUrl ? <DfBgImg src={previewUrl} size={272} height={220} /> : null}>
     <PostLink style={{ color: '#222' }} id={id} spaceId={spaceId}>
       <Title />
-      <div style={{ minHeight: 80 }}>{summarize(body)}</div>
+      <div style={{ minHeight: 135 }}>{summarize(body)}</div>
     </PostLink>
 </InnerViewPost>
 }
@@ -147,4 +147,4 @@ export const DynamicPost = () => {
     : <Empty description='Post not found' />
 }
 
-export default withPostStoreProvider(DynamicPost)
+export default DynamicPost

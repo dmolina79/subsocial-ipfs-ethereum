@@ -1,7 +1,7 @@
 export type SpaceContent = {
   title: string,
   desc: string,
-  avatar?: string
+  avatar?: string | null
 }
 
 export type SpaceDto = {
@@ -12,4 +12,9 @@ export type SpaceDto = {
     time: number
   }
   content: SpaceContent
+}
+
+export type FollowSpace = {
+  spaceId: string,
+  lastKnownPostId: number
 }

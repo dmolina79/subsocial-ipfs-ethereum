@@ -5,6 +5,7 @@ import { HomeOutlined } from '@ant-design/icons';
 import { statusTag } from '../components/utils';
 import { useBucketContext } from '../components/buckets/BucketsContext';
 import { useOrbitDbContext } from '../components/orbitdb';
+import Link from 'next/link';
 
 type EntityStatusProps = {
   title: string,
@@ -27,6 +28,10 @@ export const PageLayout = ({ children }: React.PropsWithChildren<{}>) => {
   return <>
     <PageHeader
       title={<span className='d-flex w-50'>{orbitDBStatus}{bucketStatus}</span>}
+      subTitle={<>
+        <Link href='/spaces/my' as='/spaces/my'><a className='mr-3 ant-btn'>My spaces</a></Link>
+        <Link href='/spaces/follow' as='/spaces/follow'><a className='mr-3 ant-btn'>My following spaces</a></Link>
+      </>}
       style={{ borderBottom: '1px solid #ddd' }}
       onBack={() => router.push('/', '/')}
       backIcon={<HomeOutlined />}

@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { CSSProperties } from 'react';
 import Meta from 'antd/lib/card/Meta';
 import { EditOutlined } from '@ant-design/icons';
+import { FollowSpaceButton } from './FollowSpaceButton';
 
 type ViewSpaceProps = {
   space: SpaceDto,
@@ -29,9 +30,10 @@ const SpaceLink = ({ id, children, className, style }: SpaceLinkProps) => <Link 
   </a>
 </Link>
 
-export const ViewSpace = ({ space: { id, owner, content: { avatar, desc, title } }, isPreview }: ViewSpaceProps) => {
+export const ViewSpace = ({ space, isPreview }: ViewSpaceProps) => {
+  const { id, owner, content: { avatar, desc, title } } = space;
   const editLink = <Link href='/spaces/[spaceId]/edit' as={`/spaces/${id}/edit`}>
-    <a style={{ color: '#8c8c8c' }}>
+    <a style={{ color: '#8c8c8c', marginRight: '.5rem' }}>
       <IconText icon={EditOutlined} text='Edit' key='space-edit' />
     </a>
   </Link>
@@ -39,20 +41,28 @@ export const ViewSpace = ({ space: { id, owner, content: { avatar, desc, title }
   const viewSpace = <Card style={{ width: '100%', marginTop: 16 }} >
     <Meta
       avatar={
-        <Avatar size={54} src={avatar} icon={avatar && <Jdenticon value={owner} />} />
+        <SpaceLink id={id}>
+          <Avatar size={54} src={avatar || undefined} icon={avatar && <Jdenticon value={owner} />} />
+        </SpaceLink>
       }
-    title={<span className='d-flex justify-content-between'><span>{title}</span>{editLink}</span>}
-    description={desc}
+      title={<span className='d-flex justify-content-between'>
+        <SpaceLink id={id} style={{ color: '#222' }}>{title}</SpaceLink>
+        <span>
+          {editLink}  
+          <FollowSpaceButton space={space} />
+        </span>
+      </span>}
+      description={desc}
     />
   </Card>
 
-  return isPreview ? <SpaceLink id={id}>{viewSpace}</SpaceLink> : viewSpace
+  return viewSpace
 }
 
 const SpacePage: NextPage<ViewSpaceProps> = ({ space }: ViewSpaceProps) => {
   return <div className='SpacePage'>
     <ViewSpace space={space} />
-    <DynamicPosts />
+    <DynamicPosts spaceId={space.id} />
   </div>
 }
 

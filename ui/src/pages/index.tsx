@@ -1,3 +1,3 @@
-import Spaces from '../components/spaces/Spaces'
+import { Feed } from '../components/Feed'
 
-export default Spaces
+export default Feed

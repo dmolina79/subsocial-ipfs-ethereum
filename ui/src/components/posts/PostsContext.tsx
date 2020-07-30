@@ -5,8 +5,9 @@ import DocStore from 'orbit-db-docstore'
 import { PostDto } from '../posts/types';
 import { useOrbitDbContext } from '../orbitdb';
 import { useRouter } from 'next/router';
+import OrbitDB from 'orbit-db';
 
-type PostStore = DocStore<PostDto>
+export type PostStore = DocStore<PostDto>
 
 type PostStoreContextType = {
   nextPostId: CounterStore,
@@ -16,6 +17,17 @@ type PostStoreContextType = {
 type PostProviderProps = {
   spaceId: string
 }
+
+export const getPostStoreAddress = (spaceId: string) => `spaces/${spaceId}/posts`
+export const getPostIdCounterAddress = (spaceId: string) => `next_post_id_by_space_${spaceId}`
+
+export const openPostIdCounter = (orbitdb: OrbitDB, spaceId: string) => orbitdb.open(getPostIdCounterAddress(spaceId), {
+  create: true,
+  type: 'counter',
+  replicate: true
+}) as Promise<CounterStore>
+
+export const openPostStore = (orbitdb: OrbitDB, spaceId: string): Promise<PostStore> => orbitdb.docs(getPostStoreAddress(spaceId), { indexBy: 'id' } as any ) as any
 
 export const PostStoreContext = createContext<PostStoreContextType>({ 
   nextPostId: {} as any,
@@ -32,15 +44,14 @@ export const PostStoreProvider = ({ spaceId, children }: React.PropsWithChildren
   useEffect(() => {
     async function init() {
 
-      const nextPostId = await orbitdb.open(`next_post_id_by_space_${spaceId}`, {
+      const nextPostId = await orbitdb.open(getPostIdCounterAddress(spaceId), {
         create: true,
-        type: 'counter',
-        replicate: true
+        type: 'counter'
       }) as CounterStore
 
       await nextPostId.load()
 
-      const postStore: PostStore = await orbitdb.docs(`space/${spaceId}/posts`, { indexBy: 'id' } as any)
+      const postStore: PostStore = await openPostStore(orbitdb, spaceId)
 
       await postStore.load()
 
@@ -52,6 +63,13 @@ export const PostStoreProvider = ({ spaceId, children }: React.PropsWithChildren
       }
     }
     init()
+
+    return () => {
+      if (state) {
+        state.postStore.close()
+        state.nextPostId.close()
+      }
+    }
   }, [ spaceId ])
 
   return state
@@ -62,15 +80,10 @@ export const PostStoreProvider = ({ spaceId, children }: React.PropsWithChildren
     : null
   }
 
-export default PostStoreProvider
+export default ({ children }: React.PropsWithChildren<{}>) => {
+  const { spaceId } = useRouter().query
 
-export const withPostStoreProvider = (Component: React.ComponentType<any>) => {
+  if (!spaceId) return children;
 
-  return () => {
-    const { spaceId } = useRouter().query
-
-    if (!spaceId) return null;
-
-    return <PostStoreProvider spaceId={spaceId as string}><Component spaceId={spaceId} /></PostStoreProvider>
-  }
+  return <PostStoreProvider spaceId={spaceId as string}>{children}</PostStoreProvider>
 }

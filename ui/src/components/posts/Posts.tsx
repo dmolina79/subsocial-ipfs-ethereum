@@ -4,7 +4,7 @@ import { ViewPost } from './ViewPost';
 import { PostDto } from './types';
 import { pluralize } from '../utils';
 import Link from 'next/link';
-import { usePostStoreContext, withPostStoreProvider } from './PostsContext';
+import { usePostStoreContext } from './PostsContext';
 
 type PostsListProps = {
   posts: PostDto[],
@@ -56,4 +56,4 @@ const DynamicPosts = ({ spaceId }: DynamicPostsProps) => {
     : <em>Loading posts...</em>;
 }
 
-export default withPostStoreProvider(DynamicPosts)
+export default DynamicPosts

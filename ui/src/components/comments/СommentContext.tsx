@@ -107,8 +107,7 @@ export const CommentsProvider = ({ postId, children }: React.PropsWithChildren<C
   
       commentStore = await orbitdb.open(`post/${postId}/comments`, {
         create: true,
-        type: 'feed',
-        replicate: true
+        type: 'feed'
       }) as CommentFeed
   
       await commentStore.load();

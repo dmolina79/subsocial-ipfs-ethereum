@@ -6,7 +6,7 @@ import { SpaceDto } from '../spaces/types'
 import TextArea from 'antd/lib/input/TextArea'
 import { maxLenError, minLenError, TITLE_MIN_LEN, TITLE_MAX_LEN, DESC_MAX_LEN } from '../utils'
 import { useOrbitDbContext } from '../orbitdb'
-import { usePostStoreContext, withPostStoreProvider } from './PostsContext'
+import { usePostStoreContext } from './PostsContext'
 import { BucketDragDrop } from '../drag-drop'
 import { FormInstance } from 'antd/lib/form'
 import { withLoadSpaceFromUrl } from '../spaces/ViewSpace'
@@ -254,6 +254,6 @@ export const NewPost = withLoadSpaceFromUrl((props) => {
 );
 })
 
-export const EditPost = withPostStoreProvider(withLoadSpaceFromUrl(LoadPostThenEdit))
+export const EditPost = withLoadSpaceFromUrl(LoadPostThenEdit)
 
-export default withPostStoreProvider(withLoadSpaceFromUrl(NewPost))
+export default withLoadSpaceFromUrl(NewPost)

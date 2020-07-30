@@ -28,9 +28,10 @@ type FormProps ={
   space?: SpaceDto
 }
 
-function getInitialValues ({  space }: FormProps): FormValues {
+function getInitialValues ({ space }: FormProps): FormValues {
   if (space) {
-    return { ...space.content }
+    const { title, desc, avatar = null } = space.content
+    return { title, desc, avatar }
   }
   return {}
 }
