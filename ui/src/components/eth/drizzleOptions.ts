@@ -1,13 +1,15 @@
 import Web3 from "web3"
 import { IDrizzleOptions } from "@drizzle/store"
 import { IContract } from "@drizzle/store/types/IContract"
+import Creadit from "../../contracts/Creadit.json"
 import ComplexStorage from "../../contracts/ComplexStorage.json"
 import SimpleStorage from "../../contracts/SimpleStorage.json"
 import TutorialToken from "../../contracts/TutorialToken.json"
 
-console.log({ ComplexStorage, SimpleStorage, TutorialToken })
+console.log({ Creadit, TutorialToken })
 
 const contracts: IContract[] =[
+  Creadit,
   SimpleStorage,
   ComplexStorage,
   TutorialToken
@@ -20,6 +22,7 @@ const options: IDrizzleOptions = {
   },
   contracts,
   events: {
+    Creadit: ["PaidForPost", "ChangedSpaceHandle"],
     SimpleStorage: ["StorageSet"],
   }
 }
