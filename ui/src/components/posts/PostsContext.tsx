@@ -44,12 +44,14 @@ export const PostStoreProvider = ({ spaceId, children }: React.PropsWithChildren
   useEffect(() => {
     async function init() {
 
+      console.log('Before init post counter')
       const nextPostId = await orbitdb.open(getPostIdCounterAddress(spaceId), {
         create: true,
         type: 'counter'
       }) as CounterStore
 
       await nextPostId.load()
+      console.log('After init post counter')
 
       const postStore: PostStore = await openPostStore(orbitdb, spaceId)
 
@@ -80,10 +82,12 @@ export const PostStoreProvider = ({ spaceId, children }: React.PropsWithChildren
     : null
   }
 
-export default ({ children }: React.PropsWithChildren<{}>) => {
+const PostStoreProviderWithSpaceId = ({ children }: React.PropsWithChildren<{}>) => {
   const { spaceId } = useRouter().query
 
   if (!spaceId) return children;
 
   return <PostStoreProvider spaceId={spaceId as string}>{children}</PostStoreProvider>
 }
+
+export default PostStoreProviderWithSpaceId

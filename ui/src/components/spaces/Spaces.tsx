@@ -30,10 +30,9 @@ export const MySpaces = () => {
   const [ spaces, setSpace ] = useState<SpaceDto[] | undefined>()
 
   useEffect(() => {
-    if (spaces?.length) return
-
     const loadSpace = async () => {
       const spaces = await spaceStore.get('')
+      console.log('spaces', spaces)
       setSpace(spaces)
     }
     loadSpace().catch(err => console.error(err))
@@ -65,11 +64,11 @@ export const FollowSpaces = () => {
       const followSpaces = await followSpaceStore.get('')
 
       const spaces: SpaceDto[] = []  
-      followSpaces.forEach(async ({ spaceId }) => {
-        await spaceStore.load()
+      for (const { spaceId } of followSpaces) {
         const space = await spaceStore.get(spaceId).pop()
+        console.log(space)
         space && spaces.push(space)
-      })
+      }
 
       setSpace(spaces)
     }

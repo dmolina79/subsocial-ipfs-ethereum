@@ -30,12 +30,15 @@ export const SpaceStoreProvider = (props: React.PropsWithChildren<{}>) => {
   useEffect(() => {
     async function init() {
 
+      console.log('Before init space counter')
       const nextSpaceId = await orbitdb.open('next_space_id', {
         create: true,
         type: 'counter'
       }) as CounterStore
 
       await nextSpaceId.load()
+
+      console.log('After init space counter')
 
       const spaceStore: SpaceStore = await orbitdb.docs('spaces', { indexBy: 'id' } as any)
 
@@ -46,6 +49,7 @@ export const SpaceStoreProvider = (props: React.PropsWithChildren<{}>) => {
       await followSpaceStore.load()
 
       setState({ spaceStore, followSpaceStore, nextSpaceId })
+      console.log('Initialized space context')
 
       if (window) {
         (window as any).followSpaceStore = followSpaceStore;
@@ -54,6 +58,14 @@ export const SpaceStoreProvider = (props: React.PropsWithChildren<{}>) => {
       }
     }
     init()
+
+    return () => {
+      if (state) {
+        state.followSpaceStore.close()
+        state.nextSpaceId.close()
+        state.spaceStore.close()
+      }
+    }
   }, [ false ])
 
   return state

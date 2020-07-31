@@ -27,7 +27,7 @@ type PostLinkProps = {
 }
 const PostLink = ({ id, spaceId, children, className, style }: PostLinkProps) => <Link
     href='/spaces/[spaceId]/posts/[postId]'
-    as={`/spaces/${spaceId}posts/${id}`}
+    as={`/spaces/${spaceId}/posts/${id}`}
   >
     <a className={className} style={style}>
       {children}

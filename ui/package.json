@@ -25,7 +25,7 @@
     "lodash.truncate": "^4.4.2",
     "next": "latest",
     "null-loader": "2.0.0",
-    "orbit-db": "^0.24.2",
+    "orbit-db": "0.24.2",
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
     "react-dplayer": "^0.4.1",

@@ -98,10 +98,24 @@ export const CommentsProvider = ({ postId, children }: React.PropsWithChildren<C
     let commentStore: CommentFeed
 
     const initAllComments = async () => {
-      addCommentCount = await orbitdb.counter(`add_comment_counter_${postId}`)
-      delCommentCount = await orbitdb.counter(`del_comment_counter_${postId}`)
+      console.log('Start init comments')
+      addCommentCount = await orbitdb.open(`add_comment_counter_by_post_${postId}`, {
+        create: true,
+        type: 'counter'
+      }) as CounterStore
+
+      console.log('Finish init add counter')
+
+      delCommentCount = await orbitdb.open(`del_comment_counter_by_post_${postId}`, {
+        create: true,
+        type: 'counter'
+      }) as CounterStore
+
+      console.log('Finish init del counter')
       await addCommentCount.load()
       await delCommentCount.load()
+
+      console.log('addCommentCount.value - delCommentCount.value', addCommentCount.value - delCommentCount.value)
   
       setTotalCommentCount(addCommentCount.value - delCommentCount.value)
   
