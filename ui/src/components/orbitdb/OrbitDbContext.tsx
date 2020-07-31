@@ -2,9 +2,7 @@ import React, { useContext, createContext, useState, useEffect } from 'react';
 
 const IpfsClient = require('ipfs-http-client')
 import OrbitDB from 'orbit-db'
-import { HomeOutlined } from '@ant-design/icons';
-import { PageHeader, Tag } from 'antd';
-import { useRouter } from 'next/router';
+import { orbitConst } from './orbitConn';
 
 const ipfs = IpfsClient('/ip4/127.0.0.1/tcp/5001')
 
@@ -12,20 +10,23 @@ let orbitdb: OrbitDB | undefined = undefined
 
 type OrbitDb = {
   orbitdb: OrbitDB,
-  owner: string
+  owner: string,
+  isReady: boolean
 }
 
-export const OrbitDbContext = createContext<OrbitDb>({ 
+const initialState = { 
   orbitdb: {} as any,
-  owner: '' 
-});
+  owner: '',
+  isReady: false
+}
+
+export const OrbitDbContext = createContext<OrbitDb>(initialState);
 
 export const useOrbitDbContext = () =>
   useContext(OrbitDbContext)
 
 export const OrbitDbProvider = (props: React.PropsWithChildren<{}>) => {
-  const [ orbit, setOrbit ] = useState<OrbitDb>()
-  const router = useRouter()
+  const [ orbit, setOrbit ] = useState<OrbitDb>(initialState)
 
   useEffect(() => {
     async function initOrbitDB() {
@@ -37,32 +38,18 @@ export const OrbitDbProvider = (props: React.PropsWithChildren<{}>) => {
 
       orbitdb = await OrbitDB.createInstance(ipfs)
 
-      setOrbit({ orbitdb, owner: (orbitdb as any).identity.id })
+      setOrbit({ orbitdb, owner: (orbitdb as any).identity.id, isReady: true })
       if (window) {
-        (window as any).orbitdb = orbitdb;
+        orbitConst.orbitDb = orbitdb;
+        (window as any).orbitConst = orbitConst;
       }
     }
     initOrbitDB()
   }, [ false ])
 
-  const status = orbit
-    ? <Tag color="green">READY</Tag>
-    : <Tag color="red">Connecting...</Tag>
-
-  return <>
-    <PageHeader
-      title='OrbitDB'
-      style={{ borderBottom: '1px solid #ddd' }}
-      subTitle={status}
-      onBack={() => router.push('/')}
-      backIcon={<HomeOutlined />}
-    />
-    <div className='PageContent'>
-      {orbit && <OrbitDbContext.Provider value={orbit}>
-        {props.children}
-      </OrbitDbContext.Provider>}
-    </div>
-  </>
+  return <OrbitDbContext.Provider value={orbit}>
+      {props.children}
+    </OrbitDbContext.Provider>
 }
 
 export default OrbitDbProvider
@@ -81,3 +68,22 @@ export default OrbitDbProvider
 
 //   return postStore;
 // }
+
+     // const peerId = ''
+      // await db.access.grant('write', id2)
+
+      // const nextPostId = await orbitdb.create('post_total_counter', 'counter', {
+      //   accessController: {
+      //     write: [
+      //       '*' // Anyone can write
+      //       // Give access to ourselves
+      //       // orbitdb.identity.id,
+      //       // Give access to the second peer
+      //       // peerId
+      //     ]
+      //   },
+      //   // overwrite: true,
+      //   // replicate: false,
+      //   // meta: { hello: 'meta hello' }
+      // }) as CounterStore
+      // database is now ready to be queried

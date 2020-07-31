@@ -1,28 +1,26 @@
 import React, { useState, useEffect } from 'react'
-import { Form, Input, Empty, Button, notification } from 'antd'
+import { Form, Input, Empty, Button, notification, Tabs } from 'antd'
 import { useRouter } from 'next/router'
-import { PostDto, RegularPostContent } from './types'
-import { Space } from '../spaces/types'
+import { PostDto, PostContent, AllValues } from './types'
+import { SpaceDto } from '../spaces/types'
 import TextArea from 'antd/lib/input/TextArea'
-import { maxLenError, minLenError } from '../utils'
+import { maxLenError, minLenError, TITLE_MIN_LEN, TITLE_MAX_LEN, DESC_MAX_LEN } from '../utils'
 import { useOrbitDbContext } from '../orbitdb'
 import { usePostStoreContext } from './PostsContext'
 import { BucketDragDrop } from '../drag-drop'
 import { FormInstance } from 'antd/lib/form'
+import { withLoadSpaceFromUrl } from '../spaces/ViewSpace'
 
-const TITLE_MIN_LEN = 3
-const TITLE_MAX_LEN = 100
-
-const BODY_MAX_LEN = 20_000
+const { TabPane } = Tabs;
 
 const layout = {
   labelCol: { span: 4 },
   wrapperCol: { span: 20 },
 };
 
-type Content = RegularPostContent
+type Content = PostContent
 
-type FormValues = Partial<Content> & {
+type FormValues = AllValues & {
   spaceId?: string
 }
 
@@ -32,7 +30,10 @@ const fieldName = (name: FieldName): FieldName => name
 
 type FormProps ={
   post?: PostDto,
-  space?: Space
+  space: SpaceDto,
+  isTitle?: boolean,
+  isImg?: boolean,
+  isVideo?: boolean
 }
 
 function getInitialValues ({  space, post }: FormProps): FormValues {
@@ -65,7 +66,7 @@ export const isValidForm = async (form: FormInstance) => {
 }
 
 export function InnerForm (props: FormProps) {
-  const { space = { id: '1' }, post } = props
+  const { space, post, isTitle, isImg, isVideo } = props
   const [ submitting, setSubmitting ] = useState(false)
   const [ form ] = Form.useForm()
   const router = useRouter()
@@ -77,8 +78,6 @@ export function InnerForm (props: FormProps) {
 
   const isNew = !post
 
-  const editType = isNew ? 'New' : 'Edit'
-
   const spaceId = space.id
   const initialValues = getInitialValues({ space, post })
 
@@ -87,12 +86,11 @@ export function InnerForm (props: FormProps) {
   }
 
   const fieldValuesToContent = (): Content => {
-    const { title, body, image = null } = getFieldValues()
-    return { title, body, image } as Content
+    return getFieldValues() as Content
   }
 
   const goToView = (postId: string) => {
-    router.push('/posts/[postId]', `/posts/${postId}`)
+    router.push('/spaces/[spaceId]/posts/[postId]', `/spaces/${spaceId}/posts/${postId}`)
       .catch(err => console.error(`Failed to redirect to a post page. ${err}`))
   }
 
@@ -100,11 +98,19 @@ export function InnerForm (props: FormProps) {
     form.setFieldsValue({ [fieldName('body')]: e.target.value })
   }
 
-  const onImageUpload = (url: string) => {
-    form.setFieldsValue({ [fieldName('image')]: url })
+  const onUpload = (url: string, name: 'image' | 'video') => {
+    form.setFieldsValue({ [fieldName(name)]: url })
   }
 
-  const addPost = async (content: RegularPostContent) => {
+  const onImageUpload = (url: string) => {
+    onUpload(url, 'image')
+  }
+
+  const onVideoUpload = (url: string) => {
+    onUpload(url, 'video')
+  }
+
+  const addPost = async (content: PostContent) => {
     isNew && await nextPostId.inc()
     const postId = nextPostId.value.toString()
 
@@ -114,12 +120,10 @@ export function InnerForm (props: FormProps) {
       owner,
       created: {
         account: owner,
-        time: new Date().toUTCString()
+        time: new Date().getTime()
       },
       content: content
     }
-    
-    setSubmitting(true)
 
     await postStore.put(post)
 
@@ -131,14 +135,13 @@ export function InnerForm (props: FormProps) {
   const onSubmit = async () => {
     const isValid = await isValidForm(form)
     if (isValid) {
+      setSubmitting(true)
       addPost(fieldValuesToContent())
     }
   }
 
-  return <>
-    <h2>{editType} post</h2>
-    <Form form={form} initialValues={initialValues} {...layout}>
-      <Form.Item
+  return <Form form={form} initialValues={initialValues} {...layout}>
+      {isTitle && <Form.Item
         name={fieldName('title')}
         label='Post title'
         hasFeedback
@@ -149,7 +152,7 @@ export function InnerForm (props: FormProps) {
         ]}
       >
         <Input placeholder='Optional: A title of your post' />
-      </Form.Item>
+      </Form.Item>}
 
       <Form.Item
         name={fieldName('body')}
@@ -157,53 +160,45 @@ export function InnerForm (props: FormProps) {
         hasFeedback
         rules={[
           { required: true, message: 'Post body is required.' },
-          { max: BODY_MAX_LEN, message: maxLenError('Post body', BODY_MAX_LEN) }
+          { max: DESC_MAX_LEN, message: maxLenError('Post body', DESC_MAX_LEN) }
         ]}
       >
         <TextArea rows={5} onChange={onBodyChanged} />
       </Form.Item>
 
-      <Form.Item
+      {(isImg || isVideo) && <Form.Item
         name={fieldName('image')}
-        label='Upload image'
+        label={isVideo ? 'Preview' : 'Image'}
         hasFeedback
         rules={[
           { required: true, message: 'Post image is required.' }
         ]}
       >
-        <BucketDragDrop onUploadImage={onImageUpload} />
-      </Form.Item>
+        <BucketDragDrop onUpload={onImageUpload} accept='image' />
+      </Form.Item>}
+
+      {isVideo && <Form.Item
+        name={fieldName('video')}
+        label='Video'
+        hasFeedback
+        rules={[
+          { required: true, message: 'Post video is required.' }
+        ]}
+      >
+        <BucketDragDrop onUpload={onVideoUpload} accept='video' />
+      </Form.Item>}
 
       <div className='RigthButtonGroup'>
         <Button onClick={() => form.resetFields()}>
           Reset form
         </Button>
-        <Button htmlType="submit" loading={submitting} onClick={onSubmit} type="primary">
+        <Button htmlType="submit" loading={submitting} disabled={submitting} onClick={onSubmit} type="primary">
           New Post
         </Button>
       </div>
       {/* // TODO impl Move post to another space. See component SelectSpacePreview */}
-    </Form>
-  </>
+  </Form>
 }
-
-// export function withLoadSpaceFromUrl<Props> (
-//   Component: React.ComponentType<Props>
-// ) {
-//   return function (props: Props): React.ReactElement<Props> {
-
-//     const id = useRouter().query.spaceId as string
-//     const [ isLoaded, setIsLoaded ] = useState(false)
-//     const [ loadedData, setLoadedData ] = useState({})
-
-//     if (!isLoaded) return <Loading label='Loading the space...' />
-
-//     const { space } = loadedData
-//     if (!space) return <NoData description='Space not found' />
-
-//     return <Component {...props} space={space} />
-//   }
-// }
 
 function LoadPostThenEdit (props: FormProps) {
   const { postId } = useRouter().query
@@ -229,11 +224,35 @@ function LoadPostThenEdit (props: FormProps) {
   const isOwner = myAddress === post.owner
   if (!isOwner) return <Empty description='You do not have permission to edit this post' />
 
-  return <InnerForm {...props} post={post} />
+  const { content: { title, image, video } } = post
+
+  return <>
+    <h2>Edit post</h2>
+    <InnerForm {...props} post={post} isTitle={!!title} isImg={!!image} isVideo={!!video} />
+  </>
 }
 
-export const EditPost = LoadPostThenEdit
+export const NewPost = withLoadSpaceFromUrl((props) => {
+  return (<>
+    <h2>New post</h2>
+    <Tabs defaultActiveKey="status" type="card" size='large'>
+      <TabPane tab="Status" key="status">
+        <InnerForm {...props} />
+      </TabPane>
+      <TabPane tab="Article" key="article">
+        <InnerForm {...props} isTitle />
+      </TabPane>
+      <TabPane tab="Image" key="image">
+        <InnerForm {...props} isImg />
+      </TabPane>
+      <TabPane tab="Video" key="video">
+        <InnerForm {...props} isVideo isTitle />
+      </TabPane>
+    </Tabs>
+  </>
+);
+})
 
-export const NewPost = InnerForm
+export const EditPost = withLoadSpaceFromUrl(LoadPostThenEdit)
 
-export default NewPost
+export default withLoadSpaceFromUrl(NewPost)

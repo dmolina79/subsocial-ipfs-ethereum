@@ -1,6 +1,6 @@
 import { List, Button } from 'antd';
 import React, { useEffect, useState } from 'react';
-import { ViewPostPreview } from './ViewPost';
+import { ViewPost } from './ViewPost';
 import { PostDto } from './types';
 import { pluralize } from '../utils';
 import Link from 'next/link';
@@ -19,12 +19,15 @@ export const PostsList = ({ posts, header }: PostsListProps) => {
       itemLayout='vertical'
       header={header}
       dataSource={posts}
-      renderItem={post => <ViewPostPreview post={post} />}
+      renderItem={post => <ViewPost post={post} />}
     />
     : <em>Loading posts...</em>;
 }
 
-const DynamicPosts = () => {
+type DynamicPostsProps = {
+  spaceId: string
+}
+const DynamicPosts = ({ spaceId }: DynamicPostsProps) => {
   const { postStore, nextPostId: { value: count } } = usePostStoreContext()
   const [ posts, setPosts ] = useState<PostDto[] | undefined>()
 
@@ -44,7 +47,7 @@ const DynamicPosts = () => {
         header={<h2 className='d-flex justify-content-between'>
           {pluralize(count, 'post')}
           <Button type='primary' ghost>
-            <Link href='/posts/new'>
+            <Link href='/spaces/[spaceId]/posts/new' as={`/spaces/${spaceId}/posts/new`}>
               <a>New post</a>
             </Link>
           </Button>
@@ -52,20 +55,5 @@ const DynamicPosts = () => {
       />
     : <em>Loading posts...</em>;
 }
-
-// export const Posts: NextPage<PostsListProps> = (props) => <PostsList {...props} />
-
-// Posts.getInitialProps = async (props): Promise<any> => {
-//   const postStore = await getPostStore()
-//   const posts = await postStore.get('')
-
-//   if (!posts) {
-//     return return404(props)
-//   }
-
-//   return { 
-//     posts
-//   }
-// }
 
 export default DynamicPosts

@@ -4,7 +4,7 @@ export type CommentDto = {
   owner: string,
   created: {
     account: string,
-    time: string
+    time: number
   }
   parentId?: string | null
 }
@@ -14,5 +14,6 @@ export type CommentValue = Omit<CommentDto,'id'> & {
 }
 
 export type CommentsProviderProps = {
-  postId: string
+  postId: string,
+  spaceId: string,
 }
