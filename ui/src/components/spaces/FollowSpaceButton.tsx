@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from 'antd';
 import { SpaceDto } from './types';
-import { useSpaceStoreContext } from './SpaceContext';
+import { useFollowSpaceStoreContext } from './FollowSpaceContext';
 
 type InnerFollowButton = {
   isFollow?: boolean,
@@ -25,7 +25,7 @@ type FollowSpaceButton = {
 }
 
 export const FollowSpaceButton = ({ space: { id } }: FollowSpaceButton) => {
-  const { followSpaceStore } = useSpaceStoreContext()
+  const { followSpaceStore } = useFollowSpaceStoreContext()
   const [ isFollow, setFollow ] = useState<boolean>()
 
   useEffect(() => {

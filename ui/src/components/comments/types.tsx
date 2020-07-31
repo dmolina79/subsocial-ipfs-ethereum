@@ -14,5 +14,6 @@ export type CommentValue = Omit<CommentDto,'id'> & {
 }
 
 export type CommentsProviderProps = {
-  postId: string
+  postId: string,
+  spaceId: string,
 }

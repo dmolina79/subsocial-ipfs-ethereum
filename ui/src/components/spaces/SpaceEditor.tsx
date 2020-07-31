@@ -30,8 +30,7 @@ type FormProps ={
 
 function getInitialValues ({ space }: FormProps): FormValues {
   if (space) {
-    const { title, desc, avatar = null } = space.content
-    return { title, desc, avatar }
+    return { ...space.content }
   }
   return {}
 }
@@ -77,7 +76,8 @@ export function InnerForm (props: FormProps) {
   }
 
   const fieldValuesToContent = (): Content => {
-    return getFieldValues() as Content
+    const { avatar = null, ...other } =  getFieldValues() as Content
+    return { avatar, ...other }
   }
 
   const goToView = (spaceId: string) => {
@@ -106,8 +106,6 @@ export function InnerForm (props: FormProps) {
       },
       content: content
     }
-    
-    setSubmitting(true)
 
     await spaceStore.put(space)
 
@@ -119,6 +117,7 @@ export function InnerForm (props: FormProps) {
   const onSubmit = async () => {
     const isValid = await isValidForm(form)
     if (isValid) {
+      setSubmitting(true)
       addSpace(fieldValuesToContent())
     }
   }
@@ -154,6 +153,10 @@ export function InnerForm (props: FormProps) {
       <Form.Item
         name={fieldName('avatar')}
         label={'Avatar'}
+        hasFeedback
+        rules={[
+          { required: true, message: 'Avatar is required.' }
+        ]}
       >
         <BucketDragDrop onUpload={onImageUpload} accept='image' />
       </Form.Item>
@@ -162,7 +165,7 @@ export function InnerForm (props: FormProps) {
         <Button onClick={() => form.resetFields()}>
           Reset form
         </Button>
-        <Button htmlType="submit" loading={submitting} onClick={onSubmit} type="primary">
+        <Button htmlType="submit" loading={submitting} disabled={submitting} onClick={onSubmit} type="primary">
           New Space
         </Button>
       </div>

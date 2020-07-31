@@ -16,6 +16,8 @@ export const DragDrop = ({ onChange, accept,  ...props}: DragDropProps) => {
   return <Dragger
     {...props}
     accept={`${accept}/*`}
+    className={uploaded ? 'UploadedDragger' : ''}
+    listType='picture-card'
     onChange={(info) => {
         const { status } = info.file;
         if (status !== 'uploading') {

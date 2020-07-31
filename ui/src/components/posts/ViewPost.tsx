@@ -1,5 +1,5 @@
 import { List, Avatar, Tooltip, Empty } from 'antd';
-import { MessageOutlined, LikeOutlined, StarOutlined, EditOutlined } from '@ant-design/icons';
+import { MessageOutlined, EditOutlined } from '@ant-design/icons';
 import React, { useState, useEffect, CSSProperties } from 'react';
 import { Comments } from '../comments/Comments';
 import { NextPage } from 'next';
@@ -9,10 +9,12 @@ import { PostsList } from './Posts';
 import moment from 'moment';
 import { toShortAddress, summarize, DfBgImg, IconText } from '../utils';
 import Jdenticon from 'react-jdenticon';
-import CommentsProvider, { useCommentsContext } from '../comments/СommentContext';
 import { useRouter } from 'next/router';
 import { usePostStoreContext } from './PostsContext';
 import { Player } from './DPlayer';
+import { useOrbitDbContext } from '../orbitdb';
+import { useCommentsContext } from '../comments/СommentContext';
+import { orbitConst } from '../orbitdb/orbitConn';
 
 type ViewPostProps = {
   post: PostDto
@@ -39,15 +41,56 @@ type InnerViewPostProps = ViewPostProps & {
   children?: React.ReactNode
 }
 
+const useTotalCommentCount = (postId: string) => {
+  const [ count, setCount ] = useState(0)
+  const { orbitdb } = useOrbitDbContext()
+
+  const closeConn = async () => {
+    const { commentStore, addCommentCount, delCommentCount } = orbitConst
+    if (commentStore) {
+      await commentStore.close();
+      orbitConst.commentStore = undefined
+    }
+    if (addCommentCount) {
+      await addCommentCount.close();
+      orbitConst.addCommentCount = undefined
+    }
+    if (delCommentCount) {
+      await delCommentCount.close();
+      orbitConst.delCommentCount = undefined
+    }
+  }
+
+  useEffect(() => {
+    const getCount = async () => {
+
+      const addCommentCount = await orbitdb.counter(`add_comment_counter_${postId}`)
+      console.log('After init comment counter')
+      const delCommentCount = await orbitdb.counter(`del_comment_counter_${postId}`)
+      await addCommentCount.load()
+      await delCommentCount.load()
+
+      setCount(addCommentCount.value - delCommentCount.value)
+
+      closeConn()
+    }
+
+    getCount().catch(err => console.error(err))
+
+    return () => { closeConn() }
+  }, [])
+
+  return count
+}
+
 export const InnerViewPost = ({ post: { created, owner, id, spaceId }, preview, children }: InnerViewPostProps) => {
   const time = moment(created.time)
-  const { state: { totalCommentCount } } = useCommentsContext()
+  const { query: { postId } } = useRouter()
+  const totalCommentCount = postId ? useCommentsContext().state.totalCommentCount : useTotalCommentCount(id)
 
   return <List.Item
     key={created.time}
     actions={[
-      <IconText icon={StarOutlined} text="156" key="list-vertical-star-o" />,
-      <IconText icon={LikeOutlined} text="156" key="list-vertical-like-o" />,
       <IconText icon={MessageOutlined} text={totalCommentCount} key="list-vertical-message" />,
       <Link href='/posts/[postId]/edit' as={`/posts/${id}/edit`}>
         <a style={{ color: '#8c8c8c' }}>
@@ -141,9 +184,7 @@ export const DynamicPost = () => {
   if (!isLoaded) return <em>Loading post...</em>
 
   return post
-    ? <CommentsProvider postId={postId as string}>
-        <PostPage post={post} />
-      </CommentsProvider>
+    ? <PostPage post={post} />
     : <Empty description='Post not found' />
 }
 

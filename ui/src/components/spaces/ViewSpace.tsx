@@ -69,7 +69,7 @@ const SpacePage: NextPage<ViewSpaceProps> = ({ space }: ViewSpaceProps) => {
 export function withLoadSpaceFromUrl (
   Component: React.ComponentType<ViewSpaceProps>
 ) {
-  return function (props: ViewSpaceProps): React.ReactElement<ViewSpaceProps> {
+  return function (): React.ReactElement<ViewSpaceProps> {
     const { spaceStore } = useSpaceStoreContext()
     const spaceId = useRouter().query.spaceId as string
     const [ isLoaded, setIsLoaded ] = React.useState(false)
@@ -88,7 +88,7 @@ export function withLoadSpaceFromUrl (
 
     if (!space) return <Empty description='Space not found' />
 
-    return <Component {...props} space={space} />
+    return <Component space={space} />
   }
 }
 

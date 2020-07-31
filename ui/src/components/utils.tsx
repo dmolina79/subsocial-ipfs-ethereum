@@ -106,8 +106,8 @@ type LoadingProps = {
   className?: string
 }
 
-export const Loading = ({ label, className }: LoadingProps) => <div className={`d-flex justify-content-center ${className}`}>
-  <LoadingOutlined className='mr-1' />
+export const Loading = ({ label, className }: LoadingProps) => <div className={`d-flex mt-3 justify-content-center ${className}`}>
+  <LoadingOutlined className='mr-3' />
   {label}
 </div>
 

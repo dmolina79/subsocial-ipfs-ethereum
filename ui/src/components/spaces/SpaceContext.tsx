@@ -3,21 +3,21 @@ import React, { useContext, createContext, useState, useEffect } from 'react';
 import CounterStore from 'orbit-db-counterstore'
 import DocStore from 'orbit-db-docstore'
 import { useOrbitDbContext } from '../orbitdb';
-import { SpaceDto, FollowSpace } from './types';
+import { SpaceDto } from './types';
+import { Loading } from '../utils';
+import { orbitConst } from '../orbitdb/orbitConn';
+import { useRouter } from 'next/router';
 
-type SpaceStore = DocStore<SpaceDto>
-type FollowSpaceStore = DocStore<FollowSpace>
+export type SpaceStore = DocStore<SpaceDto>
 
 type SpaceStoreContextType = {
   nextSpaceId: CounterStore,
-  spaceStore: SpaceStore,
-  followSpaceStore: FollowSpaceStore,
+  spaceStore: SpaceStore
 }
 
 export const SpaceStoreContext = createContext<SpaceStoreContextType>({ 
   nextSpaceId: {} as any,
-  spaceStore: {} as any,
-  followSpaceStore: {} as any
+  spaceStore: {} as any
 });
 
 export const useSpaceStoreContext = () =>
@@ -26,6 +26,22 @@ export const useSpaceStoreContext = () =>
 export const SpaceStoreProvider = (props: React.PropsWithChildren<{}>) => {
   const [ state, setState ] = useState<SpaceStoreContextType>()
   const { orbitdb } = useOrbitDbContext()
+
+  const closeConn = async () => {
+    const {
+      spaceStore,
+      nextSpaceId,
+    } = orbitConst
+
+    if (spaceStore) {
+      await spaceStore.close();
+      orbitConst.spaceStore = undefined
+    }
+    if (nextSpaceId) {
+      await nextSpaceId.close();
+      orbitConst.nextSpaceId = undefined
+    }
+  }
 
   useEffect(() => {
     async function init() {
@@ -44,27 +60,15 @@ export const SpaceStoreProvider = (props: React.PropsWithChildren<{}>) => {
 
       await spaceStore.load()
 
-      const followSpaceStore: FollowSpaceStore = await orbitdb.docs('follow_spaces', { indexBy: 'spaceId' } as any)
+      setState({ spaceStore, nextSpaceId });
 
-      await followSpaceStore.load()
-
-      setState({ spaceStore, followSpaceStore, nextSpaceId })
-      console.log('Initialized space context')
-
-      if (window) {
-        (window as any).followSpaceStore = followSpaceStore;
-        (window as any).spaceStore = spaceStore;
-        (window as any).nextSpaceId = nextSpaceId;
-      }
+      orbitConst.spaceStore = spaceStore;
+      orbitConst.nextSpaceId = nextSpaceId;
     }
     init()
 
     return () => {
-      if (state) {
-        state.followSpaceStore.close()
-        state.nextSpaceId.close()
-        state.spaceStore.close()
-      }
+      closeConn()
     }
   }, [ false ])
 
@@ -73,7 +77,16 @@ export const SpaceStoreProvider = (props: React.PropsWithChildren<{}>) => {
         value={state}>
           {props.children}
       </SpaceStoreContext.Provider>
-    : null
+    : <Loading label='Initialization space context'/>
   }
 
-export default SpaceStoreProvider
+
+const SpaceStoreWrapper = ({ children }: React.PropsWithChildren<{}>): JSX.Element | null => {
+  const { query: { postId }, pathname } = useRouter()
+
+  if (postId || !pathname.includes('spaces')) return <>{children}</>;
+
+  return <SpaceStoreProvider>{children}</SpaceStoreProvider>
+}
+
+export default SpaceStoreWrapper

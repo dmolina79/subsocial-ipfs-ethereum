@@ -6,6 +6,8 @@ import { PostDto } from '../posts/types';
 import { useOrbitDbContext } from '../orbitdb';
 import { useRouter } from 'next/router';
 import OrbitDB from 'orbit-db';
+import { Loading } from '../utils';
+import { orbitConst } from '../orbitdb/orbitConn';
 
 export type PostStore = DocStore<PostDto>
 
@@ -19,7 +21,7 @@ type PostProviderProps = {
 }
 
 export const getPostStoreAddress = (spaceId: string) => `spaces/${spaceId}/posts`
-export const getPostIdCounterAddress = (spaceId: string) => `next_post_id_by_space_${spaceId}`
+export const getPostIdCounterAddress = (spaceId: string) => `spaces/${spaceId}/next_post_id`
 
 export const openPostIdCounter = (orbitdb: OrbitDB, spaceId: string) => orbitdb.open(getPostIdCounterAddress(spaceId), {
   create: true,
@@ -41,6 +43,24 @@ export const PostStoreProvider = ({ spaceId, children }: React.PropsWithChildren
   const [ state, setState ] = useState<PostStoreContextType>()
   const { orbitdb } = useOrbitDbContext()
 
+  const closeConn = async () => {
+    const {
+      nextPostId,
+      postStore
+    } = orbitConst
+
+  
+    if (nextPostId) {
+      await nextPostId.close();
+      orbitConst.nextPostId = undefined
+    }
+    if (postStore) {
+      await postStore.close();
+      orbitConst.postStore = undefined
+    }
+
+  }
+
   useEffect(() => {
     async function init() {
 
@@ -57,21 +77,16 @@ export const PostStoreProvider = ({ spaceId, children }: React.PropsWithChildren
 
       await postStore.load()
 
+      console.log('After init post counter')
+
       setState({ postStore, nextPostId })
 
-      if (window) {
-        (window as any).postStore = postStore;
-        (window as any).nextPostId = nextPostId;
-      }
+      orbitConst.postStore = postStore;
+      orbitConst.nextPostId = nextPostId;
     }
     init()
 
-    return () => {
-      if (state) {
-        state.postStore.close()
-        state.nextPostId.close()
-      }
-    }
+    return () => { closeConn() }
   }, [ spaceId ])
 
   return state
@@ -79,13 +94,13 @@ export const PostStoreProvider = ({ spaceId, children }: React.PropsWithChildren
         value={state}>
           {children}
       </PostStoreContext.Provider>
-    : null
+    : <Loading label='Initialization post context'/>
   }
 
-const PostStoreProviderWithSpaceId = ({ children }: React.PropsWithChildren<{}>) => {
+const PostStoreProviderWithSpaceId = ({ children }: React.PropsWithChildren<{}>): JSX.Element | null => {
   const { spaceId } = useRouter().query
 
-  if (!spaceId) return children;
+  if (!spaceId) return <>{children}</>;
 
   return <PostStoreProvider spaceId={spaceId as string}>{children}</PostStoreProvider>
 }

@@ -2,6 +2,7 @@ import React, { useContext, createContext, useState, useEffect } from 'react';
 
 const IpfsClient = require('ipfs-http-client')
 import OrbitDB from 'orbit-db'
+import { orbitConst } from './orbitConn';
 
 const ipfs = IpfsClient('/ip4/127.0.0.1/tcp/5001')
 
@@ -39,7 +40,8 @@ export const OrbitDbProvider = (props: React.PropsWithChildren<{}>) => {
 
       setOrbit({ orbitdb, owner: (orbitdb as any).identity.id, isReady: true })
       if (window) {
-        (window as any).orbitdb = orbitdb;
+        orbitConst.orbitDb = orbitdb;
+        (window as any).orbitConst = orbitConst;
       }
     }
     initOrbitDB()

@@ -78,8 +78,6 @@ export function InnerForm (props: FormProps) {
 
   const isNew = !post
 
-  const editType = isNew ? 'New' : 'Edit'
-
   const spaceId = space.id
   const initialValues = getInitialValues({ space, post })
 
@@ -126,8 +124,6 @@ export function InnerForm (props: FormProps) {
       },
       content: content
     }
-    
-    setSubmitting(true)
 
     await postStore.put(post)
 
@@ -139,13 +135,12 @@ export function InnerForm (props: FormProps) {
   const onSubmit = async () => {
     const isValid = await isValidForm(form)
     if (isValid) {
+      setSubmitting(true)
       addPost(fieldValuesToContent())
     }
   }
 
-  return <>
-    <h2>{editType} post</h2>
-    <Form form={form} initialValues={initialValues} {...layout}>
+  return <Form form={form} initialValues={initialValues} {...layout}>
       {isTitle && <Form.Item
         name={fieldName('title')}
         label='Post title'
@@ -197,13 +192,12 @@ export function InnerForm (props: FormProps) {
         <Button onClick={() => form.resetFields()}>
           Reset form
         </Button>
-        <Button htmlType="submit" loading={submitting} onClick={onSubmit} type="primary">
+        <Button htmlType="submit" loading={submitting} disabled={submitting} onClick={onSubmit} type="primary">
           New Post
         </Button>
       </div>
       {/* // TODO impl Move post to another space. See component SelectSpacePreview */}
-    </Form>
-  </>
+  </Form>
 }
 
 function LoadPostThenEdit (props: FormProps) {
@@ -232,11 +226,15 @@ function LoadPostThenEdit (props: FormProps) {
 
   const { content: { title, image, video } } = post
 
-  return <InnerForm {...props} post={post} isTitle={!!title} isImg={!!image} isVideo={!!video} />
+  return <>
+    <h2>Edit post</h2>
+    <InnerForm {...props} post={post} isTitle={!!title} isImg={!!image} isVideo={!!video} />
+  </>
 }
 
 export const NewPost = withLoadSpaceFromUrl((props) => {
-  return (
+  return (<>
+    <h2>New post</h2>
     <Tabs defaultActiveKey="status" type="card" size='large'>
       <TabPane tab="Status" key="status">
         <InnerForm {...props} />
@@ -251,6 +249,7 @@ export const NewPost = withLoadSpaceFromUrl((props) => {
         <InnerForm {...props} isVideo isTitle />
       </TabPane>
     </Tabs>
+  </>
 );
 })
 

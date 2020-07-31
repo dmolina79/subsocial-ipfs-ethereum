@@ -5,7 +5,7 @@ import { SpaceDto } from './types';
 import { pluralize } from '../utils';
 import Link from 'next/link';
 import { useSpaceStoreContext } from './SpaceContext';
-import { PostStoreProvider } from '../posts/PostsContext';
+import { useFollowSpaceStoreContext } from './FollowSpaceContext';
 
 type SpaceListProps = {
   spaces: SpaceDto[],
@@ -20,7 +20,7 @@ export const SpaceList = ({ spaces, header }: SpaceListProps) => {
       itemLayout='vertical'
       header={header}
       dataSource={spaces}
-      renderItem={space => <PostStoreProvider spaceId={space.id}><ViewSpace space={space} isPreview /></PostStoreProvider>}
+      renderItem={space => <ViewSpace space={space} isPreview />}
     />
     : <em>Loading spaces...</em>;
 }
@@ -32,7 +32,6 @@ export const MySpaces = () => {
   useEffect(() => {
     const loadSpace = async () => {
       const spaces = await spaceStore.get('')
-      console.log('spaces', spaces)
       setSpace(spaces)
     }
     loadSpace().catch(err => console.error(err))
@@ -54,7 +53,8 @@ export const MySpaces = () => {
 }
 
 export const FollowSpaces = () => {
-  const { followSpaceStore, spaceStore, nextSpaceId: { value: count } } = useSpaceStoreContext()
+  const { spaceStore } = useSpaceStoreContext()
+  const { followSpaceStore } = useFollowSpaceStoreContext()
   const [ spaces, setSpace ] = useState<SpaceDto[] | undefined>()
 
   useEffect(() => {
@@ -66,7 +66,6 @@ export const FollowSpaces = () => {
       const spaces: SpaceDto[] = []  
       for (const { spaceId } of followSpaces) {
         const space = await spaceStore.get(spaceId).pop()
-        console.log(space)
         space && spaces.push(space)
       }
 
@@ -78,7 +77,7 @@ export const FollowSpaces = () => {
   return spaces
     ? <SpaceList
         spaces={spaces}
-        header={<h2>{pluralize(count, 'followed space')}</h2>}
+        header={<h2>{pluralize(spaces.length, 'followed space')}</h2>}
       />
     : <em>Loading spaces...</em>;
 }
