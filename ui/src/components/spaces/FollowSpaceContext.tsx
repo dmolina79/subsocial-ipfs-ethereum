@@ -31,7 +31,7 @@ export const FollowSpaceStoreProvider = (props: React.PropsWithChildren<{}>) => 
 
     async function init() {
 
-      followSpaceStore = await orbitdb.docs('follow_spaces', { indexBy: 'spaceId' } as any)
+      followSpaceStore = await orbitdb.docs('follow_spaces', { indexBy: 'spacePath' } as any)
 
       await followSpaceStore.load()
 

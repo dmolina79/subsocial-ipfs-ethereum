@@ -7,62 +7,97 @@ import { useOrbitDbContext } from '../orbitdb';
 import { useRouter } from 'next/router';
 import OrbitDB from 'orbit-db';
 import { Loading } from '../utils';
+import { PostLinks, SpaceDto } from '../spaces/types';
 
 export type PostStore = DocStore<PostDto>
 
-type PostStoreContextType = {
-  nextPostId: CounterStore,
+type PostStoreStateType = {
+  nextPostId?: CounterStore,
   postStore: PostStore,
+  postsPath: string,
+  isReady: boolean
+}
+
+type PostStoreContextType = PostStoreStateType & {
+  setLinksFromSpace: (space: SpaceDto) => void
 }
 
 type PostProviderProps = {
-  spaceId: string
+  postStoreLink: string
 }
 
-export const getPostStoreAddress = (spaceId: string) => `spaces/${spaceId}/posts`
-export const getPostIdCounterAddress = (spaceId: string) => `spaces/${spaceId}/next_post_id`
+export const createPostIdCounter = async (orbitdb: OrbitDB, spaceId: string) => await orbitdb.create(`spaces/${spaceId}/next_post_id`, 'counter', {
+  accessController: {
+    write: [
+      '*' // Anyone can write
+      // Give access to ourselves
+      // orbitdb.identity.id,
+      // Give access to the second peer
+      // peerId
+    ]
+  },
+}) as CounterStore
 
-export const openPostIdCounter = (orbitdb: OrbitDB, spaceId: string) => orbitdb.open(getPostIdCounterAddress(spaceId), {
-  create: true,
+export const createPostStore = async (orbitdb: OrbitDB, spaceId: string) => await orbitdb.create(`spaces/${spaceId}/posts`, 'docstore', {
+  accessController: {
+    write: [
+      '*' // Anyone can write
+      // Give access to ourselves
+      // orbitdb.identity.id,
+      // Give access to the second peer
+      // peerId
+    ]
+  },
+}) as PostStore
+
+export const openPostIdCounter = (orbitdb: OrbitDB, postsPath: string) => orbitdb.open(postsPath, {
   type: 'counter',
-  replicate: true
 }) as Promise<CounterStore>
 
-export const openPostStore = (orbitdb: OrbitDB, spaceId: string): Promise<PostStore> => orbitdb.docs(getPostStoreAddress(spaceId), { indexBy: 'id' } as any ) as any
+export const openPostStore = async (orbitdb: OrbitDB, postsPath: string) => await orbitdb.open(postsPath, {
+  type: 'docstore',
+  indexBy: 'id'
+} as any) as PostStore
+
 
 export const PostStoreContext = createContext<PostStoreContextType>({ 
   nextPostId: {} as any,
-  postStore: {} as any, 
+  postStore: {} as any,
+  postsPath: '',
+  isReady: false,
+  setLinksFromSpace: {} as any
 });
 
 export const usePostStoreContext = () =>
   useContext(PostStoreContext)
 
-export const PostStoreProvider = ({ spaceId, children }: React.PropsWithChildren<PostProviderProps>) => {
-  const [ state, setState ] = useState<PostStoreContextType>()
+export const PostStoreProvider = ({ postStoreLink, children }: React.PropsWithChildren<PostProviderProps>) => {
+  const [ state, setState ] = useState<PostStoreStateType>({ isReady: false } as any)
+  const [ links, setLinks ] = useState<PostLinks>({ postStore: postStoreLink } as any)
   const { orbitdb } = useOrbitDbContext()
 
   useEffect(() => {
+
     let nextPostId: CounterStore;
     let postStore: PostStore;
     async function init() {
+      if (!links) return
 
       console.log('Before init post counter')
-      nextPostId = await orbitdb.open(getPostIdCounterAddress(spaceId), {
-        create: true,
-        type: 'counter'
-      }) as CounterStore
+      if (links.postIdCounter) {
+        nextPostId = await openPostIdCounter(orbitdb, links.postIdCounter)
 
-      await nextPostId.load()
+        await nextPostId.load()
+      }
       console.log('After init post counter')
 
-      postStore = await openPostStore(orbitdb, spaceId)
+      postStore = await openPostStore(orbitdb, links.postStore)
 
       await postStore.load()
 
       console.log('After init post counter')
 
-      setState({ postStore, nextPostId })
+      setState({ postStore, nextPostId, postsPath: (postStore as any).id, isReady: true })
 
     }
     init()
@@ -71,22 +106,26 @@ export const PostStoreProvider = ({ spaceId, children }: React.PropsWithChildren
       nextPostId.close()
       postStore.close()
      }
-  }, [ spaceId ])
+  }, [ links ])
 
   return state
     ? <PostStoreContext.Provider
-        value={state}>
+        value={{
+          ...state,
+          setLinksFromSpace: ({ links }: SpaceDto) => setLinks({ ...links })
+        }}>
           {children}
       </PostStoreContext.Provider>
     : <Loading label='Initialization post context'/>
   }
 
 const PostStoreProviderWithSpaceId = ({ children }: React.PropsWithChildren<{}>): JSX.Element | null => {
-  const { spaceId } = useRouter().query
+  const { query: { spaceId }, asPath } = useRouter()
 
   if (!spaceId) return <>{children}</>;
 
-  return <PostStoreProvider spaceId={spaceId as string}>{children}</PostStoreProvider>
+  console.log(asPath.substr(0, asPath.length - 2))
+  return <PostStoreProvider postStoreLink={asPath.substr(0, asPath.length - 2)}>{children}</PostStoreProvider>
 }
 
 export default PostStoreProviderWithSpaceId

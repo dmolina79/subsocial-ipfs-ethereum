@@ -11,12 +11,14 @@ export type SpaceStore = DocStore<SpaceDto>
 
 type SpaceStoreContextType = {
   nextSpaceId: CounterStore,
-  spaceStore: SpaceStore
+  spaceStore: SpaceStore,
+  spacesPath: string,
 }
 
 export const SpaceStoreContext = createContext<SpaceStoreContextType>({ 
   nextSpaceId: {} as any,
-  spaceStore: {} as any
+  spaceStore: {} as any,
+  spacesPath: ''
 });
 
 export const useSpaceStoreContext = () =>
@@ -43,13 +45,12 @@ export const SpaceStoreProvider = (props: React.PropsWithChildren<{}>) => {
 
       console.log('After init space counter')
 
-      spaceStore = await orbitdb.docs('spaces', { indexBy: 'id' } as any)
+      spaceStore = await orbitdb.docs('spaces', { indexBy: 'path' } as any)
 
       await spaceStore.load()
 
-      setState({ spaceStore, nextSpaceId });
-
-
+      console.log((spaceStore as any).id)
+      setState({ spaceStore, nextSpaceId, spacesPath: (spaceStore as any).id });
     }
     init()
 
@@ -69,7 +70,7 @@ export const SpaceStoreProvider = (props: React.PropsWithChildren<{}>) => {
 
 
 const SpaceStoreWrapper = ({ children }: React.PropsWithChildren<{}>): JSX.Element | null => {
-  const { query: { postId }, pathname } = useRouter()
+  const { pathname, query: { postId } } = useRouter()
 
   if (postId || !pathname.includes('spaces')) return <>{children}</>;
 

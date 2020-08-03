@@ -4,12 +4,13 @@ import { useRouter } from 'next/router'
 import { PostDto, PostContent, AllValues } from './types'
 import { SpaceDto } from '../spaces/types'
 import TextArea from 'antd/lib/input/TextArea'
-import { maxLenError, minLenError, TITLE_MIN_LEN, TITLE_MAX_LEN, DESC_MAX_LEN } from '../utils'
+import { maxLenError, minLenError, TITLE_MIN_LEN, TITLE_MAX_LEN, DESC_MAX_LEN, DEFAULT_PATH, getIdFromFullPath } from '../utils'
 import { useOrbitDbContext } from '../orbitdb'
 import { usePostStoreContext } from './PostsContext'
 import { BucketDragDrop } from '../drag-drop'
 import { FormInstance } from 'antd/lib/form'
 import { withLoadSpaceFromUrl } from '../spaces/ViewSpace'
+import { useSpaceStoreContext } from '../spaces/SpaceContext'
 
 const { TabPane } = Tabs;
 
@@ -38,8 +39,7 @@ type FormProps ={
 
 function getInitialValues ({  space, post }: FormProps): FormValues {
   if (space && post) {
-    const spaceId = space.id
-    return { ...post.content, spaceId }
+    return { ...post.content }
   }
   return {}
 }
@@ -72,13 +72,13 @@ export function InnerForm (props: FormProps) {
   const router = useRouter()
 
   const { owner } = useOrbitDbContext()
-  const { postStore, nextPostId } = usePostStoreContext()
+  const { spacesPath } = useSpaceStoreContext()
+  const { postStore, nextPostId, postsPath } = usePostStoreContext()
 
   if (!space) return <Empty description='Space not found' />
 
   const isNew = !post
 
-  const spaceId = space.id
   const initialValues = getInitialValues({ space, post })
 
   const getFieldValues = (): FormValues => {
@@ -90,7 +90,7 @@ export function InnerForm (props: FormProps) {
   }
 
   const goToView = (postId: string) => {
-    router.push('/spaces/[spaceId]/posts/[postId]', `/spaces/${spaceId}/posts/${postId}`)
+    router.push(`${DEFAULT_PATH}/[spaceId]/posts/[postId]`, `${postsPath}/${postId}`)
       .catch(err => console.error(`Failed to redirect to a post page. ${err}`))
   }
 
@@ -111,18 +111,27 @@ export function InnerForm (props: FormProps) {
   }
 
   const addPost = async (content: PostContent) => {
-    isNew && await nextPostId.inc()
-    const postId = nextPostId.value.toString()
 
-    const post: PostDto = {
-      id: postId,
-      spaceId: spaceId,
-      owner,
-      created: {
-        account: owner,
-        time: new Date().getTime()
-      },
-      content: content
+    let postId = post ? getIdFromFullPath(post?.path) : '0'
+    let newPost: PostDto;
+
+    if (isNew && nextPostId) {
+      await nextPostId.inc()
+      postId = nextPostId.value.toString()
+
+      newPost = {
+        path: `${postsPath}/${postId}`,
+        spacePath: `${spacesPath}/${router.query.spaceId}`,
+        owner,
+        created: {
+          account: owner,
+          time: new Date().getTime()
+        },
+        content: content,
+        links: {} as any
+      }
+    } else {
+      newPost = { ...post, content } as PostDto
     }
 
     await postStore.put(post)

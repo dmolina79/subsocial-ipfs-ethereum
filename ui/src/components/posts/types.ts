@@ -24,16 +24,22 @@ export type AllValues = {
   image?: string,
   video?: string
 }
+export type CommentsLinks = {
+  addCounter: string,
+  delCounter:string,
+  commentStore: string
+}
 
 export type PostContent = ArticlePostContent | StatusPostContent | ImagePostContent | VideoPostContent
 
 export type PostDto = {
-  id: string,
-  spaceId: string,
+  path: string,
+  spacePath: string,
   owner: string,
   created: {
     account: string,
     time: number
   }
-  content: AllValues
+  content: AllValues,
+  links: CommentsLinks
 }

@@ -7,12 +7,11 @@ import Link from 'next/link'
 import { PostDto } from './types';
 import { PostsList } from './Posts';
 import moment from 'moment';
-import { toShortAddress, summarize, DfBgImg, IconText } from '../utils';
+import { toShortAddress, summarize, DfBgImg, IconText, DEFAULT_PATH, Loading } from '../utils';
 import Jdenticon from 'react-jdenticon';
 import { useRouter } from 'next/router';
 import { usePostStoreContext } from './PostsContext';
 import { Player } from './DPlayer';
-import { useOrbitDbContext } from '../orbitdb';
 import { useCommentsContext } from '../comments/СommentContext';
 
 type ViewPostProps = {
@@ -20,15 +19,14 @@ type ViewPostProps = {
 }
 
 type PostLinkProps = {
-  id: string,
-  spaceId: string,
+  path: string,
   children: React.ReactNode,
   className?: string,
   style?: CSSProperties
 }
-const PostLink = ({ id, spaceId, children, className, style }: PostLinkProps) => <Link
-    href='/spaces/[spaceId]/posts/[postId]'
-    as={`/spaces/${spaceId}/posts/${id}`}
+const PostLink = ({ path, children, className, style }: PostLinkProps) => <Link
+    href={`${DEFAULT_PATH}/[spaceId]/posts/[postId]`}
+    as={path}
   >
     <a className={className} style={style}>
       {children}
@@ -40,44 +38,44 @@ type InnerViewPostProps = ViewPostProps & {
   children?: React.ReactNode
 }
 
-const useTotalCommentCount = (postId: string) => {
-  const [ count, setCount ] = useState(0)
-  const { orbitdb } = useOrbitDbContext()
+// const useTotalCommentCount = (postId: string) => {
+//   const [ count, setCount ] = useState(0)
+//   const { orbitdb } = useOrbitDbContext()
 
 
-  useEffect(() => {
+//   useEffect(() => {
     
-    const getCount = async () => {
+//     const getCount = async () => {
 
-      const addCommentCount = await orbitdb.counter(`add_comment_counter_${postId}`)
-      console.log('After init comment counter')
-      const delCommentCount = await orbitdb.counter(`del_comment_counter_${postId}`)
-      await addCommentCount.load()
-      await delCommentCount.load()
+//       const addCommentCount = await orbitdb.counter(`add_comment_counter_${postId}`)
+//       console.log('After init comment counter')
+//       const delCommentCount = await orbitdb.counter(`del_comment_counter_${postId}`)
+//       await addCommentCount.load()
+//       await delCommentCount.load()
 
-      setCount(addCommentCount.value - delCommentCount.value)
+//       setCount(addCommentCount.value - delCommentCount.value)
 
-      addCommentCount.close()
-      delCommentCount.close()
-    }
+//       addCommentCount.close()
+//       delCommentCount.close()
+//     }
 
-    getCount().catch(err => console.error(err))
+//     getCount().catch(err => console.error(err))
 
-  }, [])
+//   }, [])
 
-  return count
-}
+//   return count
+// }
 
-export const InnerViewPost = ({ post: { created, owner, id, spaceId }, preview, children }: InnerViewPostProps) => {
+export const InnerViewPost = ({ post: { created, owner, path }, preview, children }: InnerViewPostProps) => {
   const time = moment(created.time)
-  const { query: { postId } } = useRouter()
-  const totalCommentCount = postId ? useCommentsContext().state.totalCommentCount : useTotalCommentCount(id)
+  const totalCommentCount = useCommentsContext().state.totalCommentCount
+
 
   return <List.Item
     key={created.time}
     actions={[
       <IconText icon={MessageOutlined} text={totalCommentCount} key="list-vertical-message" />,
-      <Link href='/posts/[postId]/edit' as={`/posts/${id}/edit`}>
+      <Link href={`${DEFAULT_PATH}/[spaceId]/posts/[postId]/edit`} as={`${path}/edit`}>
         <a style={{ color: '#8c8c8c' }}>
           <IconText icon={EditOutlined} text='Edit' key='list-vertical-edit' />
         </a>
@@ -90,7 +88,7 @@ export const InnerViewPost = ({ post: { created, owner, id, spaceId }, preview, 
       title={toShortAddress(owner)}
       description={<span>
         <Tooltip title={time.format('YYYY-MM-DD HH:mm:ss')}>
-          <PostLink id={id} spaceId={spaceId} style={{ color: '#8c8c8c', fontSize: '.85rem' }}>{time.fromNow()}</PostLink>
+          <PostLink path={path} style={{ color: '#8c8c8c', fontSize: '.85rem' }}>{time.fromNow()}</PostLink>
         </Tooltip>
       </span>}
       style={{ marginBottom: '0' }}
@@ -121,13 +119,13 @@ export const ViewPostPage = ({ post }: ViewPostProps) => {
 }
 
 export const ViewPostPreview = ({ post }: ViewPostProps) => {
-  const { content: { body, title, image }, id, spaceId } = post
+  const { content: { body, title, image }, path } = post
 
   const previewUrl = image?.replace('original', 'preview')
   const Title = () => title ? <h2>{title}</h2> : null
 
   return <InnerViewPost post={post} preview={previewUrl ? <DfBgImg src={previewUrl} size={272} height={220} /> : null}>
-    <PostLink style={{ color: '#222' }} id={id} spaceId={spaceId}>
+    <PostLink style={{ color: '#222' }} path={path}>
       <Title />
       <div style={{ minHeight: 135 }}>{summarize(body)}</div>
     </PostLink>
@@ -152,21 +150,22 @@ const PostPage: NextPage<ViewPostProps> = ({ post }: ViewPostProps) => {
 }
 
 export const DynamicPost = () => {
-  const { postStore } = usePostStoreContext()
+  const { postStore, isReady } = usePostStoreContext()
   const [ post, setPost ] = useState<PostDto | undefined>()
   const [ isLoaded, setLoaded ] = useState(false)
   const { query: { postId } } = useRouter()
 
   useEffect(() => {
+    if (!isReady) return
     const loadPosts = async () => {
       const post = await postStore.get(postId).pop()
       post && setPost(post)
       setLoaded(true)
     }
     loadPosts().catch(err => console.error(err))
-  }, [ postId ])
+  }, [ postId, isReady ])
 
-  if (!isLoaded) return <em>Loading post...</em>
+  if (!isLoaded || !isReady) return <Loading label='Loading post...' />
 
   return post
     ? <PostPage post={post} />

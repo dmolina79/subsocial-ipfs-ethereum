@@ -2,7 +2,7 @@ import { List, Button } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { ViewSpace } from './ViewSpace';
 import { SpaceDto } from './types';
-import { pluralize } from '../utils';
+import { pluralize, DEFAULT_PATH } from '../utils';
 import Link from 'next/link';
 import { useSpaceStoreContext } from './SpaceContext';
 import { useFollowSpaceStoreContext } from './FollowSpaceContext';
@@ -26,7 +26,7 @@ export const SpaceList = ({ spaces, header }: SpaceListProps) => {
 }
 
 export const MySpaces = () => {
-  const { spaceStore, nextSpaceId: { value: count } } = useSpaceStoreContext()
+  const { spaceStore, spacesPath, nextSpaceId: { value: count } } = useSpaceStoreContext()
   const [ spaces, setSpace ] = useState<SpaceDto[] | undefined>()
 
   useEffect(() => {
@@ -43,7 +43,7 @@ export const MySpaces = () => {
         header={<h2 className='d-flex justify-content-between'>
           {pluralize(count, 'space')}
           <Button type='primary' ghost>
-            <Link href='/spaces/new'>
+            <Link href={`${DEFAULT_PATH}/new`} as={`${spacesPath}/new`}>
               <a>New space</a>
             </Link>
           </Button>
@@ -64,8 +64,8 @@ export const FollowSpaces = () => {
       const followSpaces = await followSpaceStore.get('')
 
       const spaces: SpaceDto[] = []  
-      for (const { spaceId } of followSpaces) {
-        const space = await spaceStore.get(spaceId).pop()
+      for (const { spacePath } of followSpaces) {
+        const space = await spaceStore.get(spacePath).pop()
         space && spaces.push(space)
       }
 

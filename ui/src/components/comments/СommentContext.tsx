@@ -108,6 +108,8 @@ export const CommentsProvider = ({ postId, spaceId, children }: React.PropsWithC
   
       setTotalCommentCount(addCommentCount.value - delCommentCount.value)
   
+      console.log('After init comment counter')
+      
       commentStore = await orbitdb.open(`spaces/${spaceId}/posts/${postId}/comments`, {
         create: true,
         type: 'feed',

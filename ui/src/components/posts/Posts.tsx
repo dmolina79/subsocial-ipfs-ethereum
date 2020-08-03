@@ -2,7 +2,7 @@ import { List, Button } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { ViewPost } from './ViewPost';
 import { PostDto } from './types';
-import { pluralize } from '../utils';
+import { pluralize, DEFAULT_PATH } from '../utils';
 import Link from 'next/link';
 import { usePostStoreContext } from './PostsContext';
 
@@ -25,10 +25,10 @@ export const PostsList = ({ posts, header }: PostsListProps) => {
 }
 
 type DynamicPostsProps = {
-  spaceId: string
+  spacePath: string
 }
-const DynamicPosts = ({ spaceId }: DynamicPostsProps) => {
-  const { postStore, nextPostId: { value: count } } = usePostStoreContext()
+const DynamicPosts = ({ spacePath }: DynamicPostsProps) => {
+  const { postStore } = usePostStoreContext()
   const [ posts, setPosts ] = useState<PostDto[] | undefined>()
 
   useEffect(() => {
@@ -45,9 +45,9 @@ const DynamicPosts = ({ spaceId }: DynamicPostsProps) => {
     ? <PostsList
         posts={posts}
         header={<h2 className='d-flex justify-content-between'>
-          {pluralize(count, 'post')}
+          {pluralize(posts.length, 'post')}
           <Button type='primary' ghost>
-            <Link href='/spaces/[spaceId]/posts/new' as={`/spaces/${spaceId}/posts/new`}>
+            <Link href={`${DEFAULT_PATH}/[spaceId]/posts/new`} as={`${spacePath}/posts/new`}>
               <a>New post</a>
             </Link>
           </Button>

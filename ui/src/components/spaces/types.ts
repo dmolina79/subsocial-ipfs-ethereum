@@ -4,17 +4,24 @@ export type SpaceContent = {
   avatar?: string | null
 }
 
+export type PostLinks = {
+  postStore: string,
+  postIdCounter: string
+}
+
 export type SpaceDto = {
-  id: string,
+  path: string,
   owner: string,
   created: {
     account: string,
     time: number
   }
-  content: SpaceContent
+  content: SpaceContent,
+  links: PostLinks
 }
 
 export type FollowSpace = {
-  spaceId: string,
+  spacePath: string,
+  links: PostLinks,
   lastKnownPostId: number
 }

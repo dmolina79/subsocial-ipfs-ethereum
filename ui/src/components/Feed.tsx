@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { openPostStore, getPostIdCounterAddress } from './posts/PostsContext';
+import { openPostStore, openPostIdCounter } from './posts/PostsContext';
 import { PostDto } from './posts/types';
 import { PostsList } from './posts/Posts';
 import { pluralize, Loading } from './utils';
 import { useOrbitDbContext } from './orbitdb';
 import EventStore from 'orbit-db-eventstore';
-import CounterStore from 'orbit-db-counterstore';
 import { useFollowSpaceStoreContext } from './spaces/FollowSpaceContext';
 
 type Feed = EventStore<PostDto>
@@ -25,14 +24,11 @@ export const Feed = () => {
 
       console.log('Init feed')
 
-      for (const { spaceId, lastKnownPostId } of followSpace) {
+      for (const { spacePath, lastKnownPostId, links } of followSpace) {
 
-        const postStore = await openPostStore(orbitdb, spaceId)
+        const postStore = await openPostStore(orbitdb, links.postStore)
         console.log('Before init counter')
-        const postIdCounter = await orbitdb.open(getPostIdCounterAddress(spaceId), {
-          create: true,
-          type: 'counter'
-        }) as CounterStore
+        const postIdCounter = await openPostIdCounter(orbitdb, links.postIdCounter)
 
         console.log('After init counter')
 
@@ -49,13 +45,13 @@ export const Feed = () => {
             ids.push(i.toString())
           }
   
-          const posts = postStore.query(({ id }) => ids.includes(id)).sort((a, b) => b.created.time - a.created.time)
+          const posts = postStore.query(({ path }) => ids.includes(path)).sort((a, b) => b.created.time - a.created.time)
 
           for (const post of posts) {
             await feed.add(post)
           }
   
-          followSpaceStore.put({ spaceId, lastKnownPostId: lastPostId })
+          followSpaceStore.put({ spacePath, lastKnownPostId: lastPostId })
         }
 
         postStore.close()
