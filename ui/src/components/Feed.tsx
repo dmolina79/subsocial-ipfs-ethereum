@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { openPostStore, openPostIdCounter } from './posts/PostsContext';
 import { PostDto } from './posts/types';
 import { PostsList } from './posts/Posts';
 import { pluralize, Loading } from './utils';
-import { useOrbitDbContext } from './orbitdb';
+import { useOrbitDbContext, openStore, openIdCounter } from './orbitdb';
 import EventStore from 'orbit-db-eventstore';
 import { useFollowSpaceStoreContext } from './spaces/FollowSpaceContext';
+import { PostStore } from './posts/PostsContext';
 
 type Feed = EventStore<PostDto>
 
@@ -26,9 +26,9 @@ export const Feed = () => {
 
       for (const { spacePath, lastKnownPostId, links } of followSpace) {
 
-        const postStore = await openPostStore(orbitdb, links.postStore)
+        const postStore = await openStore<PostStore>(orbitdb, links.postStore)
         console.log('Before init counter')
-        const postIdCounter = await openPostIdCounter(orbitdb, links.postIdCounter)
+        const postIdCounter = await openIdCounter(orbitdb, links.postIdCounter)
 
         console.log('After init counter')
 

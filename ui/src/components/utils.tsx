@@ -130,3 +130,12 @@ export const statusTag = (title: string, isReady: boolean) => isReady
 export const getIdFromFullPath = (path: string) => path.charAt(path.length-1)
 
 export const DEFAULT_PATH = '/orbitdb/[hash]/spaces'
+
+type CreateLink = {
+  hash: string,
+  spaceId: string
+}
+
+export const createSpaceLink = ({ hash }: CreateLink) => `orbitdb/${hash}/spaces`
+
+export const createPostLink = ({ hash, spaceId }: CreateLink) => `orbitdb/${hash}/spaces/${spaceId}/posts`

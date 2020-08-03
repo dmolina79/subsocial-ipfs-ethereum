@@ -3,7 +3,7 @@ import { Form, Input, Empty, Button, notification } from 'antd'
 import { useRouter } from 'next/router'
 import { SpaceDto, SpaceContent } from './types'
 import TextArea from 'antd/lib/input/TextArea'
-import { maxLenError, minLenError, TITLE_MIN_LEN, TITLE_MAX_LEN, DESC_MAX_LEN, DEFAULT_PATH } from '../utils'
+import { maxLenError, minLenError, TITLE_MIN_LEN, TITLE_MAX_LEN, DESC_MAX_LEN, DEFAULT_PATH, getIdFromFullPath } from '../utils'
 import { useOrbitDbContext } from '../orbitdb'
 import { useSpaceStoreContext } from './SpaceContext'
 import { BucketDragDrop } from '../drag-drop'
@@ -95,31 +95,39 @@ export function InnerForm (props: FormProps) {
   }
 
   const addSpace = async (content: SpaceContent) => {
-    isNew && await nextSpaceId.inc()
-    const spaceId = nextSpaceId.value.toString()
 
-    const postStore = await createPostStore(orbitdb, spaceId)
-    const postIdCouter = await createPostIdCounter(orbitdb, spaceId)
+    let spaceId = space ? getIdFromFullPath(space?.path) : '0'
+    let newSpace: SpaceDto;
 
-    const space: SpaceDto = {
-      path: `${spacesPath}/${spaceId}`,
-      owner,
-      created: {
-        account: owner,
-        time: new Date().getTime()
-      },
-      content: content,
-      links: {
-        postStore: postStore.id,
-        postIdCounter: postIdCouter.id
+    if (isNew && nextSpaceId) {
+      await nextSpaceId.inc()
+      spaceId = nextSpaceId.value.toString()
+
+      const postStore = await createPostStore(orbitdb, spaceId)
+      const postIdCouter = await createPostIdCounter(orbitdb, spaceId)
+  
+      newSpace = {
+        path: `${spacesPath}/${spaceId}`,
+        owner,
+        created: {
+          account: owner,
+          time: new Date().getTime()
+        },
+        content: content,
+        links: {
+          postStore: postStore.id,
+          postIdCounter: postIdCouter.id
+        }
       }
+
+      postStore.close()
+      postIdCouter.close()
+    } else {
+      newSpace = { ...space, content } as SpaceDto
     }
 
-    await spaceStore.put(space)
+    await spaceStore.put(newSpace)
     setSubmitting(false)
-
-    postStore.close()
-    postIdCouter.close()
 
     goToView(spaceId)
   }

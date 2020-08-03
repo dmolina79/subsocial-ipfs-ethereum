@@ -26,7 +26,7 @@ export const SpaceList = ({ spaces, header }: SpaceListProps) => {
 }
 
 export const MySpaces = () => {
-  const { spaceStore, spacesPath, nextSpaceId: { value: count } } = useSpaceStoreContext()
+  const { spaceStore, spacesPath } = useSpaceStoreContext()
   const [ spaces, setSpace ] = useState<SpaceDto[] | undefined>()
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export const MySpaces = () => {
     ? <SpaceList
         spaces={spaces}
         header={<h2 className='d-flex justify-content-between'>
-          {pluralize(count, 'space')}
+          {pluralize(spaces.length, 'space')}
           <Button type='primary' ghost>
             <Link href={`${DEFAULT_PATH}/new`} as={`${spacesPath}/new`}>
               <a>New space</a>

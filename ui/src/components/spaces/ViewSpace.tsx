@@ -25,7 +25,7 @@ type SpaceLinkProps = {
   className?: string,
   style?: CSSProperties
 }
-const SpaceLink = ({ path, children, className, style }: SpaceLinkProps) => <Link href='[spaceId]' as={path} >
+const SpaceLink = ({ path, children, className, style }: SpaceLinkProps) => <Link href={`${DEFAULT_PATH}/[spaceId]`} as={path} >
   <a className={className} style={style}>
     {children}
   </a>

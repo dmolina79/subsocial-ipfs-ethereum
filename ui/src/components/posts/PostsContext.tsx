@@ -3,11 +3,11 @@ import React, { useContext, createContext, useState, useEffect } from 'react';
 import CounterStore from 'orbit-db-counterstore'
 import DocStore from 'orbit-db-docstore'
 import { PostDto } from '../posts/types';
-import { useOrbitDbContext } from '../orbitdb';
+import { useOrbitDbContext, openStore, openIdCounter } from '../orbitdb';
 import { useRouter } from 'next/router';
-import OrbitDB from 'orbit-db';
-import { Loading } from '../utils';
+import { Loading, createPostLink } from '../utils';
 import { PostLinks, SpaceDto } from '../spaces/types';
+import OrbitDB from 'orbit-db';
 
 export type PostStore = DocStore<PostDto>
 
@@ -25,6 +25,14 @@ type PostStoreContextType = PostStoreStateType & {
 type PostProviderProps = {
   postStoreLink: string
 }
+
+export const PostStoreContext = createContext<PostStoreContextType>({ 
+  nextPostId: {} as any,
+  postStore: {} as any,
+  postsPath: '',
+  isReady: false,
+  setLinksFromSpace: {} as any
+});
 
 export const createPostIdCounter = async (orbitdb: OrbitDB, spaceId: string) => await orbitdb.create(`spaces/${spaceId}/next_post_id`, 'counter', {
   accessController: {
@@ -50,24 +58,6 @@ export const createPostStore = async (orbitdb: OrbitDB, spaceId: string) => awai
   },
 }) as PostStore
 
-export const openPostIdCounter = (orbitdb: OrbitDB, postsPath: string) => orbitdb.open(postsPath, {
-  type: 'counter',
-}) as Promise<CounterStore>
-
-export const openPostStore = async (orbitdb: OrbitDB, postsPath: string) => await orbitdb.open(postsPath, {
-  type: 'docstore',
-  indexBy: 'id'
-} as any) as PostStore
-
-
-export const PostStoreContext = createContext<PostStoreContextType>({ 
-  nextPostId: {} as any,
-  postStore: {} as any,
-  postsPath: '',
-  isReady: false,
-  setLinksFromSpace: {} as any
-});
-
 export const usePostStoreContext = () =>
   useContext(PostStoreContext)
 
@@ -75,6 +65,8 @@ export const PostStoreProvider = ({ postStoreLink, children }: React.PropsWithCh
   const [ state, setState ] = useState<PostStoreStateType>({ isReady: false } as any)
   const [ links, setLinks ] = useState<PostLinks>({ postStore: postStoreLink } as any)
   const { orbitdb } = useOrbitDbContext()
+
+  console.log(links)
 
   useEffect(() => {
 
@@ -85,13 +77,13 @@ export const PostStoreProvider = ({ postStoreLink, children }: React.PropsWithCh
 
       console.log('Before init post counter')
       if (links.postIdCounter) {
-        nextPostId = await openPostIdCounter(orbitdb, links.postIdCounter)
+        nextPostId = await openIdCounter(orbitdb, links.postIdCounter)
 
         await nextPostId.load()
       }
       console.log('After init post counter')
 
-      postStore = await openPostStore(orbitdb, links.postStore)
+      postStore = await openStore<PostStore>(orbitdb, links.postStore)
 
       await postStore.load()
 
@@ -103,8 +95,8 @@ export const PostStoreProvider = ({ postStoreLink, children }: React.PropsWithCh
     init()
 
     return () => { 
-      nextPostId.close()
-      postStore.close()
+      nextPostId && nextPostId.close()
+      postStore && postStore.close()
      }
   }, [ links ])
 
@@ -120,12 +112,11 @@ export const PostStoreProvider = ({ postStoreLink, children }: React.PropsWithCh
   }
 
 const PostStoreProviderWithSpaceId = ({ children }: React.PropsWithChildren<{}>): JSX.Element | null => {
-  const { query: { spaceId }, asPath } = useRouter()
+  const { query } = useRouter()
 
-  if (!spaceId) return <>{children}</>;
+  if (!query.spaceId) return <>{children}</>;
 
-  console.log(asPath.substr(0, asPath.length - 2))
-  return <PostStoreProvider postStoreLink={asPath.substr(0, asPath.length - 2)}>{children}</PostStoreProvider>
+  return <PostStoreProvider postStoreLink={createPostLink(query as any)}>{children}</PostStoreProvider>
 }
 
 export default PostStoreProviderWithSpaceId

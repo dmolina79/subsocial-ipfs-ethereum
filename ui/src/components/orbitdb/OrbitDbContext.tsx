@@ -3,6 +3,10 @@ import React, { useContext, createContext, useState, useEffect } from 'react';
 const IpfsClient = require('ipfs-http-client')
 import OrbitDB from 'orbit-db'
 import { orbitConst } from './orbitConn';
+import CounterStore from 'orbit-db-counterstore';
+import { SpaceStore } from '../spaces/SpaceContext';
+import { CommentStore } from '../comments/СommentContext';
+import { PostStore } from '../posts/PostsContext';
 
 const ipfs = IpfsClient('/ip4/127.0.0.1/tcp/5001')
 
@@ -54,6 +58,14 @@ export const OrbitDbProvider = (props: React.PropsWithChildren<{}>) => {
 
 export default OrbitDbProvider
 
+export const openIdCounter = async (orbitdb: OrbitDB, path: string) => await orbitdb.open(path, {
+  type: 'counter',
+}) as CounterStore
+
+export const openStore = async <T extends PostStore | SpaceStore | CommentStore>(orbitdb: OrbitDB, path: string) => await orbitdb.open(path, {
+  type: 'docstore',
+  indexBy: 'path'
+} as any) as T
 
 // export const getPostStore = async () => {
 //   if (postStore) return postStore;
@@ -87,3 +99,5 @@ export default OrbitDbProvider
       //   // meta: { hello: 'meta hello' }
       // }) as CounterStore
       // database is now ready to be queried
+
+      
