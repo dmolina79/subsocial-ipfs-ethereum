@@ -7,7 +7,6 @@ import { useOrbitDbContext } from './orbitdb';
 import EventStore from 'orbit-db-eventstore';
 import CounterStore from 'orbit-db-counterstore';
 import { useFollowSpaceStoreContext } from './spaces/FollowSpaceContext';
-import { orbitConst } from './orbitdb/orbitConn';
 
 type Feed = EventStore<PostDto>
 
@@ -15,16 +14,6 @@ export const Feed = () => {
   const { followSpaceStore } = useFollowSpaceStoreContext()
   const { orbitdb } = useOrbitDbContext()
   const [ posts, setPosts ] = useState<PostDto[] | undefined>()
-
-  const closeConn = async () => {
-    const {
-      postStore,
-      nextPostId
-    } = orbitConst
-  
-    postStore && await postStore.close()
-    nextPostId && await nextPostId.close()
-  }
 
   useEffect(() => {
     const loadFeed = async () => {
@@ -79,7 +68,7 @@ export const Feed = () => {
 
       feed.close()
     }
-    closeConn().then(loadFeed).catch(err => console.error(err))
+    loadFeed().catch(err => console.error(err))
   }, [])
 
   return posts

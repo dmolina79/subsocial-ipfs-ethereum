@@ -14,7 +14,6 @@ import { usePostStoreContext } from './PostsContext';
 import { Player } from './DPlayer';
 import { useOrbitDbContext } from '../orbitdb';
 import { useCommentsContext } from '../comments/СommentContext';
-import { orbitConst } from '../orbitdb/orbitConn';
 
 type ViewPostProps = {
   post: PostDto
@@ -45,23 +44,9 @@ const useTotalCommentCount = (postId: string) => {
   const [ count, setCount ] = useState(0)
   const { orbitdb } = useOrbitDbContext()
 
-  const closeConn = async () => {
-    const { commentStore, addCommentCount, delCommentCount } = orbitConst
-    if (commentStore) {
-      await commentStore.close();
-      orbitConst.commentStore = undefined
-    }
-    if (addCommentCount) {
-      await addCommentCount.close();
-      orbitConst.addCommentCount = undefined
-    }
-    if (delCommentCount) {
-      await delCommentCount.close();
-      orbitConst.delCommentCount = undefined
-    }
-  }
 
   useEffect(() => {
+    
     const getCount = async () => {
 
       const addCommentCount = await orbitdb.counter(`add_comment_counter_${postId}`)
@@ -72,12 +57,12 @@ const useTotalCommentCount = (postId: string) => {
 
       setCount(addCommentCount.value - delCommentCount.value)
 
-      closeConn()
+      addCommentCount.close()
+      delCommentCount.close()
     }
 
     getCount().catch(err => console.error(err))
 
-    return () => { closeConn() }
   }, [])
 
   return count
