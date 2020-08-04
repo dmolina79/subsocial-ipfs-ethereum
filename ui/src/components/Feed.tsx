@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PostDto } from './posts/types';
 import { PostsList } from './posts/Posts';
-import { pluralize, Loading, getIdFromFullPath } from './utils';
+import { Loading, getIdFromFullPath } from './utils';
 import { useOrbitDbContext, openStore, openIdCounter } from './orbitdb';
 import EventStore from 'orbit-db-eventstore';
 import { useFollowSpaceStoreContext } from './spaces/FollowSpaceContext';
@@ -68,9 +68,7 @@ export const Feed = () => {
   return posts
     ? <PostsList
         posts={posts}
-        header={<h2>
-          {pluralize(posts.length, 'post in your feed')}
-        </h2>}
+        header={<h2>My feed</h2>}
       />
     : <Loading label='Calculate feed...'/>;
 }

@@ -98,7 +98,7 @@ export const InnerViewPost = ({ post: { created, owner, path, links }, preview, 
           <PostLink path={path} style={{ color: '#8c8c8c', fontSize: '.85rem' }}>{time.fromNow()}</PostLink>
         </Tooltip>
       </span>}
-      style={{ marginBottom: '0' }}
+      // style={{ marginBottom: '0' }}
     />
     {children}
   </List.Item>
@@ -110,17 +110,20 @@ export const ViewPostPage = ({ post }: ViewPostProps) => {
 
   const Title = () => title ? <h2 className='mb-2'>{title}</h2> : null
 
-  const Media = () => video
-    ? <Player
-      video={{ url: video, name: title || '', pic: previewUrl || '' }}
-    />
-    : <img src={image} className='PostImage' /> || null
+  const Video = () => !video ? null : (
+    <div className='PostVideo'>
+      <Player video={{ url: video, name: title || '', pic: previewUrl || '' }} />
+    </div>
+  )
 
+  const Image = () => !image ? null : <img src={image} className='PostImage' />
+  
   return <InnerViewPost post={post}>
     <div className='card'>
-        <Title />
-        <Media />
-        <div className='mt-2'>{body}</div>
+      <Title />
+      <Video />
+      <Image />
+      <div>{body}</div>
     </div>
   </InnerViewPost>
 }

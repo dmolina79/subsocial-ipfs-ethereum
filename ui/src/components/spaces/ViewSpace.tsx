@@ -26,16 +26,18 @@ type SpaceLinkProps = {
   className?: string,
   style?: CSSProperties
 }
-const SpaceLink = ({ path, children, className, style }: SpaceLinkProps) => <Link href={`${DEFAULT_PATH}/[spaceId]`} as={path} >
-  <a className={className} style={style}>
-    {children}
-  </a>
-</Link>
+const SpaceLink = ({ path, children, className, style }: SpaceLinkProps) =>
+  <Link href={`${DEFAULT_PATH}/[spaceId]`} as={path} >
+    <a className={className} style={style}>
+      {children}
+    </a>
+  </Link>
 
 export const ViewSpace = ({ space, isPreview }: ViewSpaceProps) => {
   const { path, owner, content: { avatar, desc, title } } = space;
+
   const editLink = <Link href={`${DEFAULT_PATH}/[spaceId]/edit`} as={`${path}/edit`}>
-    <a style={{ color: '#8c8c8c', marginRight: '.5rem' }}>
+    <a className='mr-3' style={{ color: '#8c8c8c' }}>
       <IconText icon={EditOutlined} text='Edit' key='space-edit' />
     </a>
   </Link>
@@ -48,7 +50,7 @@ export const ViewSpace = ({ space, isPreview }: ViewSpaceProps) => {
         </SpaceLink>
       }
       title={<span className='d-flex justify-content-between'>
-        <SpaceLink path={path} style={{ color: '#222' }}>{title}</SpaceLink>
+        <h3><SpaceLink path={path} style={{ color: '#222' }}>{title}</SpaceLink></h3>
         <span>
           {editLink}  
           <FollowSpaceButton space={space} />

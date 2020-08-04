@@ -2,7 +2,7 @@ import { List, Button } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { ViewSpace } from './ViewSpace';
 import { SpaceDto } from './types';
-import { pluralize, getPathAndId, getIdFromFullPath } from '../utils';
+import { getPathAndId, getIdFromFullPath } from '../utils';
 import Link from 'next/link';
 import { useSpaceStoreContext, SpaceStore } from './SpaceContext';
 import { useFollowSpaceStoreContext } from './FollowSpaceContext';
@@ -42,7 +42,7 @@ export const MySpaces = () => {
     ? <SpaceList
         spaces={spaces}
         header={<h2 className='d-flex justify-content-between'>
-          {pluralize(spaces.length, 'space')}
+          My spaces ({spaces.length})
           <Button type='primary' ghost>
             <Link href={`/myspaces/new`} as={`/myspaces/new`}>
               <a>New space</a>
@@ -91,22 +91,8 @@ export const FollowSpaces = () => {
   return spaces
     ? <SpaceList
         spaces={spaces}
-        header={<h2>{pluralize(spaces.length, 'followed space')}</h2>}
+        header={<h2>My subscriptions</h2>}
       />
     : <em>Loading spaces...</em>;
 }
 
-// export const Space: NextPage<SpaceListProps> = (props) => <SpaceList {...props} />
-
-// Space.getInitialProps = async (props): Promise<any> => {
-//   const spaceStore = await getSpaceStore()
-//   const spaces = await spaceStore.get('')
-
-//   if (!spaces) {
-//     return return404(props)
-//   }
-
-//   return { 
-//     spaces
-//   }
-// }

@@ -23,12 +23,12 @@ function MyApp (props) {
       </Head>
       <OrbitDbProvider>
         <BucketProvider>
-          <PageLayout >
+          <PageLayout>
             <FollowSpaceStoreProvider >
               <SpaceStoreProvider>
-                  <EthereumProvider>
-                      <Component {...pageProps} />
-                   </EthereumProvider>
+                <EthereumProvider>
+                  <Component {...pageProps} />
+                </EthereumProvider>
               </SpaceStoreProvider>
             </FollowSpaceStoreProvider>
           </PageLayout>
