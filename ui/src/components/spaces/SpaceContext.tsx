@@ -5,49 +5,36 @@ import DocStore from 'orbit-db-docstore'
 import { useOrbitDbContext } from '../orbitdb';
 import { SpaceDto } from './types';
 import { Loading } from '../utils';
-import { orbitConst } from '../orbitdb/orbitConn';
 import { useRouter } from 'next/router';
 
 export type SpaceStore = DocStore<SpaceDto>
 
 type SpaceStoreContextType = {
-  nextSpaceId: CounterStore,
-  spaceStore: SpaceStore
+  nextSpaceId?: CounterStore,
+  spaceStore: SpaceStore,
+  spacesPath: string,
 }
 
 export const SpaceStoreContext = createContext<SpaceStoreContextType>({ 
   nextSpaceId: {} as any,
-  spaceStore: {} as any
+  spaceStore: {} as any,
+  spacesPath: ''
 });
 
 export const useSpaceStoreContext = () =>
   useContext(SpaceStoreContext)
 
-export const SpaceStoreProvider = (props: React.PropsWithChildren<{}>) => {
+export const SpaceStoreProvider = ({ spaceStoreLink, children }: React.PropsWithChildren<{ spaceStoreLink: string }>) => {
   const [ state, setState ] = useState<SpaceStoreContextType>()
   const { orbitdb } = useOrbitDbContext()
 
-  const closeConn = async () => {
-    const {
-      spaceStore,
-      nextSpaceId,
-    } = orbitConst
-
-    if (spaceStore) {
-      await spaceStore.close();
-      orbitConst.spaceStore = undefined
-    }
-    if (nextSpaceId) {
-      await nextSpaceId.close();
-      orbitConst.nextSpaceId = undefined
-    }
-  }
-
   useEffect(() => {
+    let nextSpaceId: CounterStore;
+    let spaceStore: SpaceStore;
     async function init() {
 
       console.log('Before init space counter')
-      const nextSpaceId = await orbitdb.open('next_space_id', {
+      nextSpaceId = await orbitdb.open('next_space_id', {
         create: true,
         type: 'counter'
       }) as CounterStore
@@ -56,37 +43,35 @@ export const SpaceStoreProvider = (props: React.PropsWithChildren<{}>) => {
 
       console.log('After init space counter')
 
-      const spaceStore: SpaceStore = await orbitdb.docs('spaces', { indexBy: 'id' } as any)
+      spaceStore = await orbitdb.docs(spaceStoreLink, { indexBy: 'path' } as any)
 
       await spaceStore.load()
 
-      setState({ spaceStore, nextSpaceId });
-
-      orbitConst.spaceStore = spaceStore;
-      orbitConst.nextSpaceId = nextSpaceId;
+      setState({ spaceStore, nextSpaceId, spacesPath: (spaceStore as any).id });
     }
     init()
 
     return () => {
-      closeConn()
+      nextSpaceId && nextSpaceId.close()
+      spaceStore && spaceStore.close()
     }
-  }, [ false ])
+  }, [ spaceStoreLink ])
 
   return state
     ? <SpaceStoreContext.Provider
         value={state}>
-          {props.children}
+          {children}
       </SpaceStoreContext.Provider>
     : <Loading label='Initialization space context'/>
   }
 
 
 const SpaceStoreWrapper = ({ children }: React.PropsWithChildren<{}>): JSX.Element | null => {
-  const { query: { postId }, pathname } = useRouter()
+  const { pathname, query } = useRouter()
 
-  if (postId || !pathname.includes('spaces')) return <>{children}</>;
+  if (query.postId || !pathname.includes('spaces')) return <>{children}</>;
 
-  return <SpaceStoreProvider>{children}</SpaceStoreProvider>
+  return <SpaceStoreProvider spaceStoreLink={'spaces'}>{children}</SpaceStoreProvider>
 }
 
 export default SpaceStoreWrapper

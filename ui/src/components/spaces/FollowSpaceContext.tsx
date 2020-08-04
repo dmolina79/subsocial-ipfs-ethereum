@@ -4,7 +4,7 @@ import DocStore from 'orbit-db-docstore'
 import { useOrbitDbContext } from '../orbitdb';
 import { FollowSpace } from './types';
 import { Loading } from '../utils';
-import { orbitConst } from '../orbitdb/orbitConn';
+// import { orbitConst } from '../orbitdb/orbitConn';W
 import { useRouter } from 'next/router';
 
 export type FollowSpaceStore = DocStore<FollowSpace>
@@ -24,32 +24,24 @@ export const FollowSpaceStoreProvider = (props: React.PropsWithChildren<{}>) => 
   const [ state, setState ] = useState<FollowSpaceStoreContextType>()
   const { orbitdb } = useOrbitDbContext()
 
-  const closeConn = async () => {
-    const {
-      followSpaceStore,
-    } = orbitConst
-  
-    if (followSpaceStore) {
-      await followSpaceStore.close();
-      orbitConst.followSpaceStore = undefined
-    }
-  }
+
 
   useEffect(() => {
+    let followSpaceStore: FollowSpaceStore;
+
     async function init() {
 
-      const followSpaceStore: FollowSpaceStore = await orbitdb.docs('follow_spaces', { indexBy: 'spaceId' } as any)
+      followSpaceStore = await orbitdb.docs('follow_spaces', { indexBy: 'spacePath' } as any)
 
       await followSpaceStore.load()
 
       setState({ followSpaceStore })
 
-      orbitConst.followSpaceStore = followSpaceStore;
     }
     init()
 
     return () => {
-      closeConn()
+      followSpaceStore.close()
     }
   }, [ false ])
 
@@ -62,9 +54,9 @@ export const FollowSpaceStoreProvider = (props: React.PropsWithChildren<{}>) => 
   }
 
 const FollowSpaceStoreWrapper =  ({ children }: React.PropsWithChildren<{}>): JSX.Element | null => {
-  const { query: { postId } } = useRouter()
+  const { query: { postId }, pathname } = useRouter()
 
-  if (postId) return <>{children}</>;
+  if (postId || pathname.includes('new')) return <>{children}</>;
 
   return <FollowSpaceStoreProvider>{children}</FollowSpaceStoreProvider>
 }

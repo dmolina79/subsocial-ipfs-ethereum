@@ -4,12 +4,14 @@ import { useRouter } from 'next/router'
 import { PostDto, PostContent, AllValues } from './types'
 import { SpaceDto } from '../spaces/types'
 import TextArea from 'antd/lib/input/TextArea'
-import { maxLenError, minLenError, TITLE_MIN_LEN, TITLE_MAX_LEN, DESC_MAX_LEN } from '../utils'
+import { maxLenError, minLenError, TITLE_MIN_LEN, TITLE_MAX_LEN, DESC_MAX_LEN, getIdFromFullPath, pathToDbName } from '../utils'
 import { useOrbitDbContext } from '../orbitdb'
 import { usePostStoreContext } from './PostsContext'
 import { BucketDragDrop } from '../drag-drop'
 import { FormInstance } from 'antd/lib/form'
 import { withLoadSpaceFromUrl } from '../spaces/ViewSpace'
+import { useSpaceStoreContext } from '../spaces/SpaceContext'
+import { createCommentStore, createCommentCounter } from '../comments/СommentContext'
 
 const { TabPane } = Tabs;
 
@@ -38,8 +40,7 @@ type FormProps ={
 
 function getInitialValues ({  space, post }: FormProps): FormValues {
   if (space && post) {
-    const spaceId = space.id
-    return { ...post.content, spaceId }
+    return { ...post.content }
   }
   return {}
 }
@@ -71,14 +72,14 @@ export function InnerForm (props: FormProps) {
   const [ form ] = Form.useForm()
   const router = useRouter()
 
-  const { owner } = useOrbitDbContext()
-  const { postStore, nextPostId } = usePostStoreContext()
+  const { owner, orbitdb } = useOrbitDbContext()
+  const { spacesPath } = useSpaceStoreContext()
+  const { postStore, nextPostId, postsPath } = usePostStoreContext()
 
   if (!space) return <Empty description='Space not found' />
 
   const isNew = !post
 
-  const spaceId = space.id
   const initialValues = getInitialValues({ space, post })
 
   const getFieldValues = (): FormValues => {
@@ -90,7 +91,7 @@ export function InnerForm (props: FormProps) {
   }
 
   const goToView = (postId: string) => {
-    router.push('/spaces/[spaceId]/posts/[postId]', `/spaces/${spaceId}/posts/${postId}`)
+    router.push(`${postsPath}/${postId}`)
       .catch(err => console.error(`Failed to redirect to a post page. ${err}`))
   }
 
@@ -111,21 +112,53 @@ export function InnerForm (props: FormProps) {
   }
 
   const addPost = async (content: PostContent) => {
-    isNew && await nextPostId.inc()
-    const postId = nextPostId.value.toString()
 
-    const post: PostDto = {
-      id: postId,
-      spaceId: spaceId,
-      owner,
-      created: {
-        account: owner,
-        time: new Date().getTime()
-      },
-      content: content
+    let postId = post ? getIdFromFullPath(post?.path) : '0'
+    let newPost: PostDto;
+
+    if (isNew && nextPostId) {
+      await nextPostId.inc()
+      postId = nextPostId.value.toString()
+      const spaceId = router.query.spaceId as string
+
+      const commentStore = await createCommentStore(orbitdb, pathToDbName(postsPath, postId))
+      const commentStoreLink = commentStore.id
+      await commentStore.close()
+      const addCounter = await createCommentCounter(orbitdb, pathToDbName(postsPath, postId), 'add')
+      const addCounterLink = addCounter.id
+      await addCounter.close()
+      const delCounter = await createCommentCounter(orbitdb, pathToDbName(postsPath, postId), 'del');
+      const delCounterLink = delCounter.id
+      await delCounter.close()
+
+      newPost = {
+        path: `${postsPath}/${postId}`,
+        spacePath: `${spacesPath}/${spaceId}`,
+        owner,
+        created: {
+          account: owner,
+          time: new Date().getTime()
+        },
+        content: content,
+        links: {
+          addCounter: addCounterLink,
+          delCounter: delCounterLink,
+          commentStore: commentStoreLink
+        }
+      }
+
+      console.log(newPost)
+
+      await commentStore.close()
+      await addCounter.close()
+      await delCounter.close()
+
+      console.log('Closing comments db')
+    } else {
+      newPost = { ...post, content } as PostDto
     }
 
-    await postStore.put(post)
+    await postStore.put(newPost)
 
     setSubmitting(false)
 

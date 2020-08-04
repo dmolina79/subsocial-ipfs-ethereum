@@ -24,21 +24,21 @@ type FollowSpaceButton = {
   space: SpaceDto
 }
 
-export const FollowSpaceButton = ({ space: { id } }: FollowSpaceButton) => {
+export const FollowSpaceButton = ({ space: { path, links } }: FollowSpaceButton) => {
   const { followSpaceStore } = useFollowSpaceStoreContext()
   const [ isFollow, setFollow ] = useState<boolean>()
 
   useEffect(() => {
-    setFollow(!!followSpaceStore.query(({ spaceId }) => spaceId === id).length);
+    setFollow(!!followSpaceStore.query(({ spacePath }) => spacePath === path).length);
   }, [])
 
   const onFollow = async () => {
-    await followSpaceStore.put({ spaceId: id, lastKnownPostId: 0 })
+    await followSpaceStore.put({ spacePath: path, lastKnownPostId: 0, links })
     setFollow(true)
   }
 
   const onUnfollow = async () => {
-    await followSpaceStore.del(id)
+    await followSpaceStore.del(path)
     setFollow(false)
   }
 

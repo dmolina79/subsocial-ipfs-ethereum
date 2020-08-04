@@ -5,10 +5,8 @@ import Head from 'next/head'
 import { OrbitDbProvider } from '../components/orbitdb'
 import { BucketProvider } from '../components/buckets/BucketsContext'
 import PageLayout from '../layout/PageLayout'
-import PostStoreProvider from '../components/posts/PostsContext'
 import SpaceStoreProvider from '../components/spaces/SpaceContext'
 import FollowSpaceStoreProvider from '../components/spaces/FollowSpaceContext'
-import CommentsProvider from '../components/comments/СommentContext'
 
 import 'antd/dist/antd.css'
 import '../styles/main.less'
@@ -27,13 +25,9 @@ function MyApp (props) {
           <PageLayout >
             <FollowSpaceStoreProvider >
               <SpaceStoreProvider>
-                <PostStoreProvider>
-                  <CommentsProvider>
-                    <Component {...pageProps} />
-                  </CommentsProvider>
-                </PostStoreProvider>
+                <Component {...pageProps} />
               </SpaceStoreProvider>
-            </FollowSpaceStoreProvider >
+            </FollowSpaceStoreProvider>
           </PageLayout>
         </BucketProvider>
       </OrbitDbProvider>

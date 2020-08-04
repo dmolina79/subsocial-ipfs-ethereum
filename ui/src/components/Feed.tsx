@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { openPostStore, getPostIdCounterAddress } from './posts/PostsContext';
 import { PostDto } from './posts/types';
 import { PostsList } from './posts/Posts';
-import { pluralize, Loading } from './utils';
-import { useOrbitDbContext } from './orbitdb';
+import { pluralize, Loading, getIdFromFullPath } from './utils';
+import { useOrbitDbContext, openStore, openIdCounter } from './orbitdb';
 import EventStore from 'orbit-db-eventstore';
-import CounterStore from 'orbit-db-counterstore';
 import { useFollowSpaceStoreContext } from './spaces/FollowSpaceContext';
-import { orbitConst } from './orbitdb/orbitConn';
+import { PostStore } from './posts/PostsContext';
 
 type Feed = EventStore<PostDto>
 
@@ -15,16 +13,6 @@ export const Feed = () => {
   const { followSpaceStore } = useFollowSpaceStoreContext()
   const { orbitdb } = useOrbitDbContext()
   const [ posts, setPosts ] = useState<PostDto[] | undefined>()
-
-  const closeConn = async () => {
-    const {
-      postStore,
-      nextPostId
-    } = orbitConst
-  
-    postStore && await postStore.close()
-    nextPostId && await nextPostId.close()
-  }
 
   useEffect(() => {
     const loadFeed = async () => {
@@ -34,19 +22,12 @@ export const Feed = () => {
 
       await feed.load()
 
-      console.log('Init feed')
+      console.log('Init a feed')
 
-      for (const { spaceId, lastKnownPostId } of followSpace) {
+      for (const { spacePath, lastKnownPostId, links } of followSpace) {
 
-        const postStore = await openPostStore(orbitdb, spaceId)
-        console.log('Before init counter')
-        const postIdCounter = await orbitdb.open(getPostIdCounterAddress(spaceId), {
-          create: true,
-          type: 'counter'
-        }) as CounterStore
-
-        console.log('After init counter')
-
+        const postStore = await openStore<PostStore>(orbitdb, links.postStore)
+        const postIdCounter = await openIdCounter(orbitdb, links.postIdCounter || '')
 
         await postStore.load()
         await postIdCounter.load()
@@ -60,17 +41,19 @@ export const Feed = () => {
             ids.push(i.toString())
           }
   
-          const posts = postStore.query(({ id }) => ids.includes(id)).sort((a, b) => b.created.time - a.created.time)
+          const posts = postStore.query(({ path }) => ids.includes(getIdFromFullPath(path))).sort((a, b) => b.created.time - a.created.time)
 
           for (const post of posts) {
             await feed.add(post)
           }
   
-          followSpaceStore.put({ spaceId, lastKnownPostId: lastPostId })
+          followSpaceStore.put({ spacePath, lastKnownPostId: lastPostId })
         }
 
         postStore.close()
         postIdCounter.close()
+
+        console.log('Success calculate feed')
       }
 
       setPosts(feed.iterator({ limit: -1 })
@@ -79,7 +62,7 @@ export const Feed = () => {
 
       feed.close()
     }
-    closeConn().then(loadFeed).catch(err => console.error(err))
+    loadFeed().catch(err => console.error(err))
   }, [])
 
   return posts

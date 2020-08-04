@@ -2,10 +2,11 @@ import { List, Button } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { ViewSpace } from './ViewSpace';
 import { SpaceDto } from './types';
-import { pluralize } from '../utils';
+import { pluralize, getPathAndId, getIdFromFullPath } from '../utils';
 import Link from 'next/link';
-import { useSpaceStoreContext } from './SpaceContext';
+import { useSpaceStoreContext, SpaceStore } from './SpaceContext';
 import { useFollowSpaceStoreContext } from './FollowSpaceContext';
+import { openStore, useOrbitDbContext } from '../orbitdb';
 
 type SpaceListProps = {
   spaces: SpaceDto[],
@@ -26,7 +27,7 @@ export const SpaceList = ({ spaces, header }: SpaceListProps) => {
 }
 
 export const MySpaces = () => {
-  const { spaceStore, nextSpaceId: { value: count } } = useSpaceStoreContext()
+  const { spaceStore } = useSpaceStoreContext()
   const [ spaces, setSpace ] = useState<SpaceDto[] | undefined>()
 
   useEffect(() => {
@@ -41,9 +42,9 @@ export const MySpaces = () => {
     ? <SpaceList
         spaces={spaces}
         header={<h2 className='d-flex justify-content-between'>
-          {pluralize(count, 'space')}
+          {pluralize(spaces.length, 'space')}
           <Button type='primary' ghost>
-            <Link href='/spaces/new'>
+            <Link href={`/myspaces/new`} as={`/myspaces/new`}>
               <a>New space</a>
             </Link>
           </Button>
@@ -53,7 +54,7 @@ export const MySpaces = () => {
 }
 
 export const FollowSpaces = () => {
-  const { spaceStore } = useSpaceStoreContext()
+  const { orbitdb } = useOrbitDbContext()
   const { followSpaceStore } = useFollowSpaceStoreContext()
   const [ spaces, setSpace ] = useState<SpaceDto[] | undefined>()
 
@@ -63,10 +64,23 @@ export const FollowSpaces = () => {
     const loadSpace = async () => {
       const followSpaces = await followSpaceStore.get('')
 
-      const spaces: SpaceDto[] = []  
-      for (const { spaceId } of followSpaces) {
-        const space = await spaceStore.get(spaceId).pop()
-        space && spaces.push(space)
+      const spaces: SpaceDto[] = [] 
+      const spacesIdsByPath = new Map<string, string[]>()
+      const paths = new Set<string>()
+
+      followSpaces.forEach(({ spacePath }) => {
+        const { path, id } = getPathAndId(spacePath)
+        paths.add(path)
+        const ids = spacesIdsByPath.get(path) || []
+        spacesIdsByPath.set(path, [ ...ids, id ])
+      })
+
+      for (const spacePath of paths) {
+        const spaceStore = await openStore<SpaceStore>(orbitdb, spacePath)
+        await spaceStore.load()
+        const ids = spacesIdsByPath.get(spacePath)
+        ids && spaces.push(...spaceStore.query(({ path }) => ids.includes(getIdFromFullPath(path))))
+        await spaceStore.close()
       }
 
       setSpace(spaces)

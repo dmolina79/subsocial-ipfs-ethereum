@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/router';
 import { SpaceDto } from './types';
-import { Loading, IconText } from '../utils';
+import { Loading, IconText, DEFAULT_PATH } from '../utils';
 import { Avatar, Empty, Card } from 'antd';
 import { NextPage } from 'next';
 import { useSpaceStoreContext } from './SpaceContext';
@@ -12,6 +12,7 @@ import { CSSProperties } from 'react';
 import Meta from 'antd/lib/card/Meta';
 import { EditOutlined } from '@ant-design/icons';
 import { FollowSpaceButton } from './FollowSpaceButton';
+import { PostStoreProvider } from '../posts/PostsContext';
 
 type ViewSpaceProps = {
   space: SpaceDto,
@@ -19,20 +20,20 @@ type ViewSpaceProps = {
 }
 
 type SpaceLinkProps = {
-  id: string,
+  path: string,
   children: React.ReactNode,
   className?: string,
   style?: CSSProperties
 }
-const SpaceLink = ({ id, children, className, style }: SpaceLinkProps) => <Link href='/spaces/[spaceId]' as={`/spaces/${id}`} >
+const SpaceLink = ({ path, children, className, style }: SpaceLinkProps) => <Link href={`${DEFAULT_PATH}/[spaceId]`} as={path} >
   <a className={className} style={style}>
     {children}
   </a>
 </Link>
 
 export const ViewSpace = ({ space, isPreview }: ViewSpaceProps) => {
-  const { id, owner, content: { avatar, desc, title } } = space;
-  const editLink = <Link href='/spaces/[spaceId]/edit' as={`/spaces/${id}/edit`}>
+  const { path, owner, content: { avatar, desc, title } } = space;
+  const editLink = <Link href={`${DEFAULT_PATH}/[spaceId]/edit`} as={`${path}/edit`}>
     <a style={{ color: '#8c8c8c', marginRight: '.5rem' }}>
       <IconText icon={EditOutlined} text='Edit' key='space-edit' />
     </a>
@@ -41,12 +42,12 @@ export const ViewSpace = ({ space, isPreview }: ViewSpaceProps) => {
   const viewSpace = <Card style={{ width: '100%', marginTop: 16 }} >
     <Meta
       avatar={
-        <SpaceLink id={id}>
+        <SpaceLink path={path}>
           <Avatar size={54} src={avatar || undefined} icon={avatar && <Jdenticon value={owner} />} />
         </SpaceLink>
       }
       title={<span className='d-flex justify-content-between'>
-        <SpaceLink id={id} style={{ color: '#222' }}>{title}</SpaceLink>
+        <SpaceLink path={path} style={{ color: '#222' }}>{title}</SpaceLink>
         <span>
           {editLink}  
           <FollowSpaceButton space={space} />
@@ -62,7 +63,7 @@ export const ViewSpace = ({ space, isPreview }: ViewSpaceProps) => {
 const SpacePage: NextPage<ViewSpaceProps> = ({ space }: ViewSpaceProps) => {
   return <div className='SpacePage'>
     <ViewSpace space={space} />
-    <DynamicPosts spaceId={space.id} />
+    <DynamicPosts spacePath={space.path} />
   </div>
 }
 
@@ -77,18 +78,20 @@ export function withLoadSpaceFromUrl (
 
     React.useEffect(() => {
       const loadSpace = async () => {
-        const post = await spaceStore.get(spaceId).pop()
-        post && setSpace(post)
+        const space = await spaceStore.get(spaceId).pop()
+        if (space) {
+          setSpace(space)
+        }
         setIsLoaded(true)
       }
       loadSpace().catch(err => console.error('Failed load space from OrbitDB:', err))
-    })
+    }, [])
 
     if (!isLoaded) return <Loading label='Loading the space...' />
 
     if (!space) return <Empty description='Space not found' />
 
-    return <Component space={space} />
+    return <PostStoreProvider links={space.links}><Component space={space} /></PostStoreProvider>
   }
 }
 

@@ -126,3 +126,28 @@ export const IconText = ({ icon, text }: IconTextProps) => (
 export const statusTag = (title: string, isReady: boolean) => isReady
   ? <Tag color="green">{`${title} READY`}</Tag>
   : <Tag color="red">{`${title} connecting...`}</Tag>
+
+export const getIdFromFullPath = (path: string) => path.charAt(path.length-1)
+
+export const getPathAndId = (fullPath: string) => {
+  const length = fullPath.length
+  const path = fullPath.substring(0, length-2)
+  const id = getIdFromFullPath(fullPath)
+  return {
+    path,
+    id
+  }
+}
+
+export const DEFAULT_PATH = '/orbitdb/[hash]/spaces'
+
+type CreateLink = {
+  hash: string,
+  spaceId: string
+}
+
+export const createSpaceLink = ({ hash }: CreateLink) => `/orbitdb/${hash}/spaces`
+
+export const createPostLink = ({ hash, spaceId }: CreateLink) => `/orbitdb/${hash}/spaces/${spaceId}/posts`
+
+export const pathToDbName = (path: string, id: string) => `${path.split('/').slice(3).join('/')}/${id}`
