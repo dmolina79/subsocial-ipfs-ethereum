@@ -1,10 +1,12 @@
+import { CommentsLinks } from "../posts/types"
+
 export type CommentDto = {
   id: string,
   body: string,
   owner: string,
   created: {
     account: string,
-    time: string
+    time: number
   }
   parentId?: string | null
 }
@@ -14,5 +16,5 @@ export type CommentValue = Omit<CommentDto,'id'> & {
 }
 
 export type CommentsProviderProps = {
-  postId: string
+  links: CommentsLinks
 }

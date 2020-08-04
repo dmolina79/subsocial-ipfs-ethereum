@@ -1,3 +1,3 @@
-import Posts from '../components/posts/Posts'
+import { Feed } from '../components/Feed'
 
-export default Posts
+export default Feed

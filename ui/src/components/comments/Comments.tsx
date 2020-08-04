@@ -1,9 +1,9 @@
 import React, {  } from 'react'
 import { List } from 'antd';
 import ViewComment from './ViewComment';
-import { CommentDto, CommentsProviderProps } from './types';
+import { CommentDto } from './types';
 import CommentEditor from './CommentEditor';
-import CommentsProvider, { useGetRootComments, useCommentsContext } from './СommentContext';
+import { useGetRootComments, useCommentsContext } from './СommentContext';
 import { pluralize } from '../utils';
 
 type CommentListProps = {
@@ -35,4 +35,4 @@ export const Comments = () => {
   </> 
 }
 
-export const CommentsWithProvider = (props: CommentsProviderProps) => <CommentsProvider {...props}><Comments /></CommentsProvider>
+export default Comments

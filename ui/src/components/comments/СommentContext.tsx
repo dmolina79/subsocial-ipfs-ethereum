@@ -1,8 +1,9 @@
 import React, { useContext, createContext, useState, useEffect } from 'react';
 import { CommentDto, CommentValue, CommentsProviderProps } from './types';
-import { useOrbitDbContext } from '../orbitdb';
+import { useOrbitDbContext, openIdCounter } from '../orbitdb';
 import FeedStore from 'orbit-db-feedstore';
 import CounterStore from 'orbit-db-counterstore';
+import OrbitDB from 'orbit-db';
 
 function functionStub() {
   throw new Error('Function needs to be set in SubsocialApiProvider')
@@ -16,12 +17,12 @@ const feedItemToComment = (e: any): CommentDto => {
   }
 }
 
-type CommentFeed = FeedStore<CommentDto>
+export type CommentStore = FeedStore<CommentDto>
 
 type CommentsContextType = {
   state: {
     comments: CommentDto[],
-    commentStore: CommentFeed,
+    commentStore: CommentStore,
     repliesIdsById: Map<string, string[]>,
     commentById: Map<string, CommentDto>,
     totalCommentCount: number,
@@ -36,7 +37,7 @@ const initMap = () => new Map<string, any>()
 const initialContext: CommentsContextType = {
   state: {
     comments: [],
-    commentStore: {} as any as CommentFeed,
+    commentStore: {} as any as CommentStore,
     totalCommentCount: 5,
     repliesIdsById: initMap(),
     commentById: initMap(),
@@ -46,16 +47,47 @@ const initialContext: CommentsContextType = {
   onCommentAdded: functionStub
 }
 
+export const createCommentCounter = async (
+  orbitdb: OrbitDB,
+  postPath: string,
+  type: 'add' | 'del'
+) => orbitdb.create(`${postPath}/${type}_comment_counter`, 'counter', {
+  accessController: {
+    write: [
+      '*' // Anyone can write
+      // Give access to ourselves
+      // orbitdb.identity.id,
+      // Give access to the second peer
+      // peerId
+    ]
+  },
+}) as Promise<CounterStore>
+
+export const createCommentStore = async (
+  orbitdb: OrbitDB,
+  postPath: string
+) => orbitdb.create(`${postPath}/comments`, 'feed', {
+  accessController: {
+    write: [
+      '*' // Anyone can write
+      // Give access to ourselves
+      // orbitdb.identity.id,
+      // Give access to the second peer
+      // peerId
+    ]
+  }
+}) as Promise<CommentStore>
+
 export const CommentsContext = createContext<CommentsContextType>(initialContext);
 
 export const useCommentsContext = () =>
   useContext(CommentsContext)
 
-export const CommentsProvider = ({ postId, children }: React.PropsWithChildren<CommentsProviderProps>) => {
+export const CommentsProvider = ({ links: { delCounter, addCounter, commentStore: commentStoreLink }, children }: React.PropsWithChildren<CommentsProviderProps>) => {
   const [comments, setComments] = useState<CommentDto[]>(initialContext.state.comments)
   const [repliesIdsById] = useState<Map<string, string[]>>(initMap())
   const [commentById] = useState<Map<string, CommentDto>>(initMap())
-  const [commentStore, setCommentStore] = useState<CommentFeed>(initialContext.state.commentStore)
+  const [commentStore, setCommentStore] = useState<CommentStore>(initialContext.state.commentStore)
   const [totalCommentCount, setTotalCommentCount] = useState<number>(0)
   const [isReady, setIsReady] = useState(false)
 
@@ -80,7 +112,7 @@ export const CommentsProvider = ({ postId, children }: React.PropsWithChildren<C
     setComments(comments.concat(newComments))
   }
 
-  const loadAllComments = (db: CommentFeed) => {
+  const loadAllComments = (db: CommentStore) => {
     const allComments: CommentDto[] = db.iterator({ limit: -1 /*, reverse: true*/ })
       .collect()
       .map(feedItemToComment)
@@ -91,47 +123,48 @@ export const CommentsProvider = ({ postId, children }: React.PropsWithChildren<C
     mapReduceToMaps([comment])
   }
 
+
   useEffect(() => {
 
     let addCommentCount: CounterStore;
-    let delCommentCount: CounterStore;
-    let commentStore: CommentFeed
+    // let delCommentCount: CounterStore;
+    let commentStore: CommentStore;
 
     const initAllComments = async () => {
-      addCommentCount = await orbitdb.counter(`add_comment_counter_${postId}`)
-      delCommentCount = await orbitdb.counter(`del_comment_counter_${postId}`)
+      console.log('Before init comment stores')
+      addCommentCount = await openIdCounter(orbitdb, addCounter)
+      // delCommentCount = await openIdCounter(orbitdb, delCounter)
       await addCommentCount.load()
-      await delCommentCount.load()
+      // await delCommentCount.load()
   
-      setTotalCommentCount(addCommentCount.value - delCommentCount.value)
-  
-      commentStore = await orbitdb.open(`post/${postId}/comments`, {
-        create: true,
+      setTotalCommentCount(addCommentCount.value /* - delCommentCount.value*/)
+      
+      commentStore = await orbitdb.open(commentStoreLink, {
         type: 'feed',
-        replicate: true
-      }) as CommentFeed
+      }) as CommentStore
   
       await commentStore.load();
     
       setCommentStore(commentStore)
-  
-      commentStore.events.on('write', async (address, entry, heads) => {
-        switch (entry.payload.op) {
-          case 'ADD': {
-            await addCommentCount.inc()
-            break;
+
+        commentStore.events.on('write', async (address, entry, heads) => {
+          switch (entry.payload.op) {
+            case 'ADD': {
+              await addCommentCount.inc()
+              break;
+            }
+            // case 'DEL': {
+            //   await delCommentCount.inc()
+            //   break;
+            // }
           }
-          case 'DEL': {
-            await delCommentCount.inc()
-            break;
-          }
-        }
-  
-        setTotalCommentCount(addCommentCount.value - delCommentCount.value)
-      });
-  
-      (window as any).commentStore = commentStore
-  
+    
+          setTotalCommentCount(addCommentCount.value /* - delCommentCount.value */)
+        });
+
+        console.log('After init comment stores')
+
+
       loadAllComments(commentStore)
       setIsReady(true)
     }
@@ -140,10 +173,10 @@ export const CommentsProvider = ({ postId, children }: React.PropsWithChildren<C
 
     return () => {
       addCommentCount && addCommentCount.close()
-      delCommentCount && delCommentCount.close()
+      // delCommentCount && delCommentCount.close()
       commentStore && commentStore.close()
     }
-  }, [ postId ])
+  }, [ addCounter, delCounter, commentStoreLink ])
 
   return <CommentsContext.Provider value={{
     state: {
@@ -173,4 +206,4 @@ export const useGetRepliesById = (id: string): CommentDto[] => {
 
 export const useGetRootComments = () => useGetRepliesById('null')
 
-export default CommentsProvider
+

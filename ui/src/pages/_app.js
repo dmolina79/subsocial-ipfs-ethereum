@@ -3,8 +3,10 @@ import App from 'next/app'
 import Head from 'next/head'
 
 import { OrbitDbProvider } from '../components/orbitdb'
-import { PostStoreProvider } from '../components/posts/PostsContext'
 import { BucketProvider } from '../components/buckets/BucketsContext'
+import PageLayout from '../layout/PageLayout'
+import SpaceStoreProvider from '../components/spaces/SpaceContext'
+import FollowSpaceStoreProvider from '../components/spaces/FollowSpaceContext'
 import { EthereumProvider } from '../components/eth/EthereumProvider'
 
 import 'antd/dist/antd.css'
@@ -21,11 +23,15 @@ function MyApp (props) {
       </Head>
       <OrbitDbProvider>
         <BucketProvider>
-          <PostStoreProvider>
-            <EthereumProvider>
-              <Component {...pageProps} />
-            </EthereumProvider>
-          </PostStoreProvider>
+          <PageLayout >
+            <FollowSpaceStoreProvider >
+              <SpaceStoreProvider>
+                  <EthereumProvider>
+                      <Component {...pageProps} />
+                   </EthereumProvider>
+              </SpaceStoreProvider>
+            </FollowSpaceStoreProvider>
+          </PageLayout>
         </BucketProvider>
       </OrbitDbProvider>
     </>

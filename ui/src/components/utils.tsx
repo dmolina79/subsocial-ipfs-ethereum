@@ -2,6 +2,13 @@ import { NextPageContext } from 'next'
 import { CSSProperties } from 'react';
 import truncate from 'lodash.truncate'
 import { LoadingOutlined } from '@ant-design/icons';
+import { Space, Tag } from 'antd';
+import React from 'react';
+
+export const TITLE_MIN_LEN = 3
+export const TITLE_MAX_LEN = 100
+
+export const DESC_MAX_LEN = 20_000
 
 export function minLenError (fieldName: string, minLen: number): string {
   return `${fieldName} is too short. Minimum length is ${minLen} chars.`
@@ -95,11 +102,52 @@ export const summarize = (
 }
 
 type LoadingProps = {
-  message?: string,
+  label?: string,
   className?: string
 }
 
-export const Loading = ({ message, className }: LoadingProps) => <div className={`d-flex justify-content-center ${className}`}>
-  <LoadingOutlined className='mr-1' />
-  {message}
+export const Loading = ({ label, className }: LoadingProps) => <div className={`d-flex mt-3 justify-content-center ${className}`}>
+  <LoadingOutlined className='mr-3' />
+  {label}
 </div>
+
+type IconTextProps = {
+  icon: React.FunctionComponent,
+  text: React.ReactNode
+}
+
+export const IconText = ({ icon, text }: IconTextProps) => (
+  <Space>
+    {React.createElement(icon)}
+    {text}
+  </Space>
+);
+
+export const statusTag = (title: string, isReady: boolean) => isReady
+  ? <Tag color="green">{`${title} READY`}</Tag>
+  : <Tag color="red">{`${title} connecting...`}</Tag>
+
+export const getIdFromFullPath = (path: string) => path.charAt(path.length-1)
+
+export const getPathAndId = (fullPath: string) => {
+  const length = fullPath.length
+  const path = fullPath.substring(0, length-2)
+  const id = getIdFromFullPath(fullPath)
+  return {
+    path,
+    id
+  }
+}
+
+export const DEFAULT_PATH = '/orbitdb/[hash]/spaces'
+
+type CreateLink = {
+  hash: string,
+  spaceId: string
+}
+
+export const createSpaceLink = ({ hash }: CreateLink) => `/orbitdb/${hash}/spaces`
+
+export const createPostLink = ({ hash, spaceId }: CreateLink) => `/orbitdb/${hash}/spaces/${spaceId}/posts`
+
+export const pathToDbName = (path: string, id: string) => `${path.split('/').slice(3).join('/')}/${id}`

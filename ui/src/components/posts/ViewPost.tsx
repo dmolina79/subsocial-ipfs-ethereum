@@ -1,5 +1,5 @@
-import { List, Avatar, Space, Tooltip, Empty } from 'antd';
-import { MessageOutlined, LikeOutlined, StarOutlined, EditOutlined } from '@ant-design/icons';
+import { List, Avatar, Tooltip, Empty } from 'antd';
+import { MessageOutlined, EditOutlined } from '@ant-design/icons';
 import React, { useState, useEffect, CSSProperties } from 'react';
 import { Comments } from '../comments/Comments';
 import { NextPage } from 'next';
@@ -7,87 +7,149 @@ import Link from 'next/link'
 import { PostDto } from './types';
 import { PostsList } from './Posts';
 import moment from 'moment';
-import { toShortAddress, summarize, DfBgImg } from '../utils';
+import { toShortAddress, summarize, DfBgImg, IconText, DEFAULT_PATH, Loading } from '../utils';
 import Jdenticon from 'react-jdenticon';
-import CommentsProvider, { useCommentsContext } from '../comments/СommentContext';
 import { useRouter } from 'next/router';
-import { usePostStoreContext } from './PostsContext';
+import { usePostStoreContext, PostStoreProviderWithLinks } from './PostsContext';
+import { Player } from './DPlayer';
+import { useCommentsContext, CommentsProvider } from '../comments/СommentContext';
+import { useOrbitDbContext, openIdCounter } from '../orbitdb';
+import CounterStore from 'orbit-db-counterstore';
 
-type IconTextProps = {
-  icon: React.FunctionComponent,
-  text: React.ReactNode
-}
-
-const IconText = ({ icon, text }: IconTextProps) => (
-  <Space>
-    {React.createElement(icon)}
-    {text}
-  </Space>
-);
-
-type ViewPostPreviewProps = {
+type ViewPostProps = {
   post: PostDto
 }
 
 type PostLinkProps = {
-  id: string,
+  path: string,
   children: React.ReactNode,
   className?: string,
   style?: CSSProperties
 }
-const PostLink = ({ id, children, className, style }: PostLinkProps) => <Link href='/posts/[postId]' as={`/posts/${id}`} >
-  <a className={className} style={style}>
-    {children}
-  </a>
-</Link>
+const PostLink = ({ path, children, className, style }: PostLinkProps) => <Link
+    href={path}
+  >
+    <a className={className} style={style}>
+      {children}
+    </a>
+  </Link>
 
-export const ViewPostPreview = ({ post: { content: { body, title, image }, created, owner, id } }: ViewPostPreviewProps) => {
+type InnerViewPostProps = ViewPostProps & {
+  preview?: React.ReactNode,
+  children?: React.ReactNode
+}
+
+const useTotalCommentCount = (addCounterLink: string) => {
+  const [ count, setCount ] = useState(0)
+  const { orbitdb } = useOrbitDbContext()
+
+
+  useEffect(() => {
+    let addCommentCount: CounterStore;
+    
+    const getCount = async () => {
+      console.log('Before init comment counter')
+
+      addCommentCount = await openIdCounter(orbitdb, addCounterLink)
+      console.log('After init comment counter')
+      // const delCommentCount = await orbitdb.counter(`del_comment_counter_${postId}`)
+      await addCommentCount.load()
+      // await delCommentCount.load()
+      setCount(addCommentCount.value)
+
+      addCommentCount.close()
+      // delCommentCount.close()
+    }
+
+    getCount().catch(err => console.error(err))
+
+    // return () => {
+    //   addCommentCount && addCommentCount.close()
+    // }
+
+  }, [])
+
+  return count
+}
+
+export const InnerViewPost = ({ post: { created, owner, path, links }, preview, children }: InnerViewPostProps) => {
   const time = moment(created.time)
-  const { state: { totalCommentCount } } = useCommentsContext()
-  const { query: { postId } } = useRouter()
-  const isPreview = !postId
-
+  const totalCommentCount = preview
+    ? useTotalCommentCount(links.addCounter)
+    : useCommentsContext().state.totalCommentCount
 
   return <List.Item
-    key={title}
+    key={created.time}
     actions={[
-      <IconText icon={StarOutlined} text="156" key="list-vertical-star-o" />,
-      <IconText icon={LikeOutlined} text="156" key="list-vertical-like-o" />,
       <IconText icon={MessageOutlined} text={totalCommentCount} key="list-vertical-message" />,
-      <Link href='/posts/[postId]/edit' as={`/posts/${id}/edit`}>
+      <Link href={`${DEFAULT_PATH}/[spaceId]/posts/[postId]/edit`} as={`${path}/edit`}>
         <a style={{ color: '#8c8c8c' }}>
           <IconText icon={EditOutlined} text='Edit' key='list-vertical-edit' />
         </a>
       </Link>
     ]}
-    extra={image && isPreview
-      ? <DfBgImg src={image.replace('original', 'preview')} size={272} height={220} />
-      : null
-    }
+    extra={preview}
   >
     <List.Item.Meta
       avatar={<Avatar icon={<Jdenticon value={owner}/>} />}
       title={toShortAddress(owner)}
       description={<span>
         <Tooltip title={time.format('YYYY-MM-DD HH:mm:ss')}>
-          <PostLink id={id} style={{ color: '#8c8c8c', fontSize: '.85rem' }}>{time.fromNow()}</PostLink>
+          <PostLink path={path} style={{ color: '#8c8c8c', fontSize: '.85rem' }}>{time.fromNow()}</PostLink>
         </Tooltip>
       </span>}
+      style={{ marginBottom: '0' }}
     />
-    {isPreview
-      ? <PostLink style={{ color: '#222' }} id={id}>
-        <h2>{title}</h2>
-        <div style={{ minHeight: 80 }}>{summarize(body)}</div>
-      </PostLink>
-      : <div>
-        <h2>{title}</h2>
-        {image && <img src={image} className='PostImage' />}
-        <div>{body}</div>
-      </div>}
+    {children}
   </List.Item>
 }
 
-const ViewPost: NextPage<ViewPostPreviewProps> = ({ post }: ViewPostPreviewProps) => {
+export const ViewPostPage = ({ post }: ViewPostProps) => {
+  const { content: { body, title, image, video } } = post
+  const previewUrl = image?.replace('original', 'preview')
+
+  const Title = () => title ? <h2 className='mb-2'>{title}</h2> : null
+
+  const Media = () => video
+    ? <Player
+      video={{ url: video, name: title || '', pic: previewUrl || '' }}
+    />
+    : <img src={image} className='PostImage' /> || null
+
+  return <InnerViewPost post={post}>
+    <div className='card'>
+        <Title />
+        <Media />
+        <div className='mt-2'>{body}</div>
+    </div>
+  </InnerViewPost>
+}
+
+export const ViewPostPreview = ({ post }: ViewPostProps) => {
+  const { content: { body, title, image }, path } = post
+
+  const previewUrl = image?.replace('original', 'preview')
+  const Title = () => title ? <h2>{title}</h2> : null
+
+  return <InnerViewPost post={post} preview={previewUrl ? <DfBgImg src={previewUrl} size={272} height={220} /> : null}>
+    <PostLink style={{ color: '#222' }} path={path}>
+      <Title />
+      <div style={{ minHeight: 135 }}>{summarize(body)}</div>
+    </PostLink>
+</InnerViewPost>
+}
+
+export const ViewPost = ({ post }: ViewPostProps) => {
+  const { query: { postId } } = useRouter()
+  
+  const isPreview = !postId
+
+  return isPreview
+    ? <ViewPostPreview post={post} />
+    : <ViewPostPage post={post} />
+}
+
+const PostPage: NextPage<ViewPostProps> = ({ post }: ViewPostProps) => {
   return <div className='PostPage'>
     <PostsList posts={[ post ]} />
     <Comments />
@@ -102,20 +164,20 @@ export const DynamicPost = () => {
 
   useEffect(() => {
     const loadPosts = async () => {
-      const post = await postStore.get('').pop()
+      const post = await postStore.get(postId).pop()
       post && setPost(post)
       setLoaded(true)
     }
     loadPosts().catch(err => console.error(err))
   }, [ postId ])
 
-  if (!isLoaded) return <em>Loading post...</em>
+  if (!isLoaded) return <Loading label='Loading post...' />
 
   return post
-    ? <CommentsProvider postId={postId as string}>
-        <ViewPost post={post} />
+    ? <CommentsProvider links={post.links}>
+        <PostPage post={post} />
       </CommentsProvider>
     : <Empty description='Post not found' />
 }
 
-export default DynamicPost
+export default () => <PostStoreProviderWithLinks><DynamicPost /></PostStoreProviderWithLinks>
