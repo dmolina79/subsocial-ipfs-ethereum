@@ -1,10 +1,8 @@
 import React from 'react'
 import { drizzleReactHooks } from '@drizzle/react-plugin'
-import { Drizzle } from '@drizzle/store'
-import drizzleOptions from './drizzleOptions'
+import { drizzle } from './drizzle'
 
 const { DrizzleProvider } = drizzleReactHooks
-const drizzle = new Drizzle(drizzleOptions)
 
 export function EthereumProvider (props) {
   return (

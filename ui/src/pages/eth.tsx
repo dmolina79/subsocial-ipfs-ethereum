@@ -1,8 +1,8 @@
 // import Eth from '../components/eth/Eth'
 import dynamic from 'next/dynamic'
-const Drizzle = dynamic(() => import('../components/eth/Drizzle'), { ssr: false })
+const Content = dynamic(() => import('../components/eth/Creadit'), { ssr: false })
 
-export default () => <>
+export default () => <div className='PageContent'>
   <h1>Hello Ethereum</h1>
-  <Drizzle />
-</>
+  <Content />
+</div>

@@ -5,24 +5,29 @@ contract Creadit {
 
   address public owner;
 
-  uint256 public handlePrice = 0.05 ether;
+  // uint256 public handlePrice = 0.05 ether;
 
-  mapping (string => uint64) public spaceIdByHandle;
+  // mapping (string => uint64) public spaceIdByHandle;
 
   uint64 public nextSpaceId = 1;
 
   mapping (uint64 => Space) public spaceById;
 
+  // TODO change to: postId => author => Post info
   mapping (string => Post) public postById;
 
+  // TODO change to: postId => author => buyer => paid amount
   mapping (
     string /* post id */ =>
-    mapping (address /* buyer */ => uint256 /* paid amount */ )
+    mapping (
+      address /* buyer */ =>
+      uint256 /* paid amount */
+    )
   ) public paidForPost;
 
   struct Space {
     address owner;
-    address payable wallet;
+    address payable wallet; // TODO set wallet per post or per author's address
     string orbitdbAddress;
     string handle;
   }
@@ -30,6 +35,7 @@ contract Creadit {
   struct Post {
     uint64 spaceId;
     uint256 price;
+    // TODO add bytes32 hashedSecret; // keccak256
   }
 
   event PaidForPost(address buyer, string postId);
@@ -101,16 +107,21 @@ contract Creadit {
     uint64 spaceId,
     string memory postId,
     uint256 price
+    // TODO add: bytes32 hashedSecret
   ) public {
     Space memory space = spaceById[spaceId];
     onlySpaceOwner(space);
-    postById[postId] = Post({ spaceId: spaceId, price: price });
+    postById[postId] = Post({
+      spaceId: spaceId,
+      price: price
+    });
   }
 
   function payPerView(
     string memory postId
   ) public payable {
     Post memory post = postById[postId];
+    require(post.price > 0, 'Post not found or has no price');
     require(msg.value >= post.price, 'Not enough funds to pay per view');
 
     Space memory space = spaceById[post.spaceId];
@@ -120,44 +131,44 @@ contract Creadit {
     emit PaidForPost(msg.sender, postId);
   }
 
-  function setHandlePrice(
-    uint256 price
-  ) public onlyOwner {
-    handlePrice = price;
-  }
+  // function setHandlePrice(
+  //   uint256 price
+  // ) public onlyOwner {
+  //   handlePrice = price;
+  // }
 
-  function setSpaceHandle(
-    uint64 spaceId,
-    string memory handle
-  ) public payable {
-    Space storage space = spaceById[spaceId];
-    onlySpaceOwner(space);
+  // function setSpaceHandle(
+  //   uint64 spaceId,
+  //   string memory handle
+  // ) public payable {
+  //   Space storage space = spaceById[spaceId];
+  //   onlySpaceOwner(space);
 
-    string memory lowerHandle = _strToLower(handle);
-    require(spaceIdByHandle[lowerHandle] == 0, 'Handle is already taken');
+  //   string memory lowerHandle = _strToLower(handle);
+  //   require(spaceIdByHandle[lowerHandle] == 0, 'Handle is already taken');
 
-    bool spaceHasHandle = bytes(space.handle).length > 0;
-    if (spaceHasHandle) {
-      // In this case we a changing a hadle of this space to a new one.
-      // Let's release a current handle:
-      spaceIdByHandle[space.handle] = 0;
+  //   bool spaceHasHandle = bytes(space.handle).length > 0;
+  //   if (spaceHasHandle) {
+  //     // In this case we a changing a hadle of this space to a new one.
+  //     // Let's release a current handle:
+  //     spaceIdByHandle[space.handle] = 0;
 
-      // Return any sent amount, such as you need to pay for a space handle once:
-      if (msg.value > 0) {
-        msg.sender.transfer(msg.value);
-      }
-    } else {
-      // Space hasn't purchased a handle before.
-      // Buy a handle for this space for the first time:
-      require(msg.value >= handlePrice, 'Not enough funds to buy a space handle');
-    }
+  //     // Return any sent amount, such as you need to pay for a space handle once:
+  //     if (msg.value > 0) {
+  //       msg.sender.transfer(msg.value);
+  //     }
+  //   } else {
+  //     // Space hasn't purchased a handle before.
+  //     // Buy a handle for this space for the first time:
+  //     require(msg.value >= handlePrice, 'Not enough funds to buy a space handle');
+  //   }
 
-    // Register a new handle for this space:
-    spaceIdByHandle[lowerHandle] = spaceId;
-    space.handle = lowerHandle;
+  //   // Register a new handle for this space:
+  //   spaceIdByHandle[lowerHandle] = spaceId;
+  //   space.handle = lowerHandle;
 
-    emit ChangedSpaceHandle(msg.sender, spaceId);
-  }
+  //   emit ChangedSpaceHandle(msg.sender, spaceId);
+  // }
 
   // Found this utility function here: https://gist.github.com/ottodevs/c43d0a8b4b891ac2da675f825b1d1dbf#gistcomment-3310614
   function _strToLower(string memory str) internal pure returns (string memory) {
