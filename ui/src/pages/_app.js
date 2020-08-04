@@ -19,15 +19,15 @@ function MyApp (props) {
       <Head>
         {/* <script src="/env.js" /> */}
       </Head>
-      <OrbitDbProvider>
+      {/* <OrbitDbProvider>
         <BucketProvider>
-          <PostStoreProvider>
+          <PostStoreProvider> */}
             <EthereumProvider>
               <Component {...pageProps} />
             </EthereumProvider>
-          </PostStoreProvider>
+          {/* </PostStoreProvider>
         </BucketProvider>
-      </OrbitDbProvider>
+      </OrbitDbProvider> */}
     </>
   )
 }

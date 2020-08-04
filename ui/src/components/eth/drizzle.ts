@@ -1,12 +1,13 @@
 import Web3 from "web3"
-import { IDrizzleOptions } from "@drizzle/store"
+import { Drizzle, IDrizzleOptions } from "@drizzle/store"
 import { IContract } from "@drizzle/store/types/IContract"
+import { ETH_NODE_HOST, ETH_NODE_PORT } from './conf'
 import Creadit from "../../contracts/Creadit.json"
 import ComplexStorage from "../../contracts/ComplexStorage.json"
 import SimpleStorage from "../../contracts/SimpleStorage.json"
 import TutorialToken from "../../contracts/TutorialToken.json"
 
-console.log({ Creadit, TutorialToken })
+// console.log({ Creadit, TutorialToken })
 
 const contracts: IContract[] =[
   Creadit,
@@ -18,7 +19,7 @@ const contracts: IContract[] =[
 const options: IDrizzleOptions = {
   web3: {
     // block: false,
-    customProvider: new Web3("ws://localhost:8545"),
+    customProvider: new Web3(`ws://${ETH_NODE_HOST}:${ETH_NODE_PORT}`)
   },
   contracts,
   events: {
@@ -27,4 +28,4 @@ const options: IDrizzleOptions = {
   }
 }
 
-export default options
+export const drizzle = new Drizzle(options)
