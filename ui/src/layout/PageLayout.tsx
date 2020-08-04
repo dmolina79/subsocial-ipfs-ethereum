@@ -29,8 +29,8 @@ export const PageLayout = ({ children }: React.PropsWithChildren<{}>) => {
     <PageHeader
       title={<span className='d-flex w-50'>{orbitDBStatus}{bucketStatus}</span>}
       subTitle={<>
-        <Link href='/spaces/my' as='/spaces/my'><a className='mr-3 ant-btn'>My spaces</a></Link>
-        <Link href='/spaces/follow' as='/spaces/follow'><a className='mr-3 ant-btn'>My following spaces</a></Link>
+        <Link href='/myspaces' as='/myspaces'><a className='mr-3 ant-btn'>My spaces</a></Link>
+        <Link href='/myspaces/follow' as='/myspaces/follow'><a className='mr-3 ant-btn'>My following spaces</a></Link>
       </>}
       style={{ borderBottom: '1px solid #ddd' }}
       onBack={() => router.push('/', '/')}

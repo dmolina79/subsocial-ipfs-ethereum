@@ -1,3 +1,5 @@
+import { CommentsLinks } from "../posts/types"
+
 export type CommentDto = {
   id: string,
   body: string,
@@ -14,6 +16,5 @@ export type CommentValue = Omit<CommentDto,'id'> & {
 }
 
 export type CommentsProviderProps = {
-  postId: string,
-  spaceId: string,
+  links: CommentsLinks
 }

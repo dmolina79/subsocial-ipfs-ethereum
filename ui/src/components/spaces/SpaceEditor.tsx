@@ -3,7 +3,7 @@ import { Form, Input, Empty, Button, notification } from 'antd'
 import { useRouter } from 'next/router'
 import { SpaceDto, SpaceContent } from './types'
 import TextArea from 'antd/lib/input/TextArea'
-import { maxLenError, minLenError, TITLE_MIN_LEN, TITLE_MAX_LEN, DESC_MAX_LEN, DEFAULT_PATH, getIdFromFullPath } from '../utils'
+import { maxLenError, minLenError, TITLE_MIN_LEN, TITLE_MAX_LEN, DESC_MAX_LEN, DEFAULT_PATH, getIdFromFullPath, pathToDbName } from '../utils'
 import { useOrbitDbContext } from '../orbitdb'
 import { useSpaceStoreContext } from './SpaceContext'
 import { BucketDragDrop } from '../drag-drop'
@@ -103,8 +103,10 @@ export function InnerForm (props: FormProps) {
       await nextSpaceId.inc()
       spaceId = nextSpaceId.value.toString()
 
-      const postStore = await createPostStore(orbitdb, spaceId)
-      const postIdCouter = await createPostIdCounter(orbitdb, spaceId)
+      const dbName = pathToDbName(spacesPath, spaceId)
+
+      const postStore = await createPostStore(orbitdb, dbName)
+      const postIdCouter = await createPostIdCounter(orbitdb, dbName)
   
       newSpace = {
         path: `${spacesPath}/${spaceId}`,

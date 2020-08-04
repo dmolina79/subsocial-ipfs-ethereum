@@ -12,7 +12,7 @@ import { CSSProperties } from 'react';
 import Meta from 'antd/lib/card/Meta';
 import { EditOutlined } from '@ant-design/icons';
 import { FollowSpaceButton } from './FollowSpaceButton';
-import { usePostStoreContext } from '../posts/PostsContext';
+import { PostStoreProvider } from '../posts/PostsContext';
 
 type ViewSpaceProps = {
   space: SpaceDto,
@@ -74,14 +74,12 @@ export function withLoadSpaceFromUrl (
     const { spaceStore } = useSpaceStoreContext()
     const spaceId = useRouter().query.spaceId as string
     const [ isLoaded, setIsLoaded ] = React.useState(false)
-    const { setLinksFromSpace, isReady } = usePostStoreContext()
     const [ space, setSpace ] = React.useState<SpaceDto>()
 
     React.useEffect(() => {
       const loadSpace = async () => {
         const space = await spaceStore.get(spaceId).pop()
         if (space) {
-          setLinksFromSpace(space)
           setSpace(space)
         }
         setIsLoaded(true)
@@ -89,11 +87,11 @@ export function withLoadSpaceFromUrl (
       loadSpace().catch(err => console.error('Failed load space from OrbitDB:', err))
     }, [])
 
-    if (!isLoaded ||isReady) return <Loading label='Loading the space...' />
+    if (!isLoaded) return <Loading label='Loading the space...' />
 
     if (!space) return <Empty description='Space not found' />
 
-    return <Component space={space} />
+    return <PostStoreProvider links={space.links}><Component space={space} /></PostStoreProvider>
   }
 }
 

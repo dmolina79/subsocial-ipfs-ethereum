@@ -2,9 +2,9 @@ import React, { useContext, createContext, useState, useEffect } from 'react';
 
 import CounterStore from 'orbit-db-counterstore'
 import DocStore from 'orbit-db-docstore'
-import { useOrbitDbContext, openStore } from '../orbitdb';
+import { useOrbitDbContext } from '../orbitdb';
 import { SpaceDto } from './types';
-import { Loading, createSpaceLink } from '../utils';
+import { Loading } from '../utils';
 import { useRouter } from 'next/router';
 
 export type SpaceStore = DocStore<SpaceDto>
@@ -24,11 +24,9 @@ export const SpaceStoreContext = createContext<SpaceStoreContextType>({
 export const useSpaceStoreContext = () =>
   useContext(SpaceStoreContext)
 
-export const SpaceStoreProvider = ({ spaceStoreLink, children }: React.PropsWithChildren<{ spaceStoreLink?: string }>) => {
+export const SpaceStoreProvider = ({ spaceStoreLink, children }: React.PropsWithChildren<{ spaceStoreLink: string }>) => {
   const [ state, setState ] = useState<SpaceStoreContextType>()
   const { orbitdb } = useOrbitDbContext()
-
-  console.log(spaceStoreLink)
 
   useEffect(() => {
     let nextSpaceId: CounterStore;
@@ -45,20 +43,17 @@ export const SpaceStoreProvider = ({ spaceStoreLink, children }: React.PropsWith
 
       console.log('After init space counter')
 
-      spaceStore = spaceStoreLink
-      ? await openStore<SpaceStore>(orbitdb, spaceStoreLink)
-      : await orbitdb.docs('spaces', { indexBy: 'path' } as any)
+      spaceStore = await orbitdb.docs(spaceStoreLink, { indexBy: 'path' } as any)
 
       await spaceStore.load()
 
-      console.log((spaceStore as any).id)
       setState({ spaceStore, nextSpaceId, spacesPath: (spaceStore as any).id });
     }
     init()
 
     return () => {
-      nextSpaceId.close()
-      spaceStore.close()
+      nextSpaceId && nextSpaceId.close()
+      spaceStore && spaceStore.close()
     }
   }, [ spaceStoreLink ])
 
@@ -76,7 +71,7 @@ const SpaceStoreWrapper = ({ children }: React.PropsWithChildren<{}>): JSX.Eleme
 
   if (query.postId || !pathname.includes('spaces')) return <>{children}</>;
 
-  return <SpaceStoreProvider spaceStoreLink={query.spaceId ? createSpaceLink(query as any) : undefined}>{children}</SpaceStoreProvider>
+  return <SpaceStoreProvider spaceStoreLink={'spaces'}>{children}</SpaceStoreProvider>
 }
 
 export default SpaceStoreWrapper

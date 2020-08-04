@@ -6,35 +6,31 @@ import { PostDto } from '../posts/types';
 import { useOrbitDbContext, openStore, openIdCounter } from '../orbitdb';
 import { useRouter } from 'next/router';
 import { Loading, createPostLink } from '../utils';
-import { PostLinks, SpaceDto } from '../spaces/types';
+import { PostLinks } from '../spaces/types';
 import OrbitDB from 'orbit-db';
 
 export type PostStore = DocStore<PostDto>
 
-type PostStoreStateType = {
+type PostStoreContextType = {
   nextPostId?: CounterStore,
   postStore: PostStore,
-  postsPath: string,
-  isReady: boolean
-}
-
-type PostStoreContextType = PostStoreStateType & {
-  setLinksFromSpace: (space: SpaceDto) => void
+  postsPath: string
 }
 
 type PostProviderProps = {
-  postStoreLink: string
+  links: PostLinks
 }
 
 export const PostStoreContext = createContext<PostStoreContextType>({ 
   nextPostId: {} as any,
   postStore: {} as any,
-  postsPath: '',
-  isReady: false,
-  setLinksFromSpace: {} as any
+  postsPath: ''
 });
 
-export const createPostIdCounter = async (orbitdb: OrbitDB, spaceId: string) => await orbitdb.create(`spaces/${spaceId}/next_post_id`, 'counter', {
+export const createPostIdCounter = async (
+  orbitdb: OrbitDB,
+  spacePath: string,
+) => await orbitdb.create(`${spacePath}/next_post_id`, 'counter', {
   accessController: {
     write: [
       '*' // Anyone can write
@@ -46,7 +42,10 @@ export const createPostIdCounter = async (orbitdb: OrbitDB, spaceId: string) => 
   },
 }) as CounterStore
 
-export const createPostStore = async (orbitdb: OrbitDB, spaceId: string) => await orbitdb.create(`spaces/${spaceId}/posts`, 'docstore', {
+export const createPostStore = async (
+  orbitdb: OrbitDB,
+  spacePath: string
+) => await orbitdb.create(`${spacePath}/posts`, 'docstore', {
   accessController: {
     write: [
       '*' // Anyone can write
@@ -55,18 +54,15 @@ export const createPostStore = async (orbitdb: OrbitDB, spaceId: string) => awai
       // Give access to the second peer
       // peerId
     ]
-  },
+  }
 }) as PostStore
 
 export const usePostStoreContext = () =>
   useContext(PostStoreContext)
 
-export const PostStoreProvider = ({ postStoreLink, children }: React.PropsWithChildren<PostProviderProps>) => {
-  const [ state, setState ] = useState<PostStoreStateType>({ isReady: false } as any)
-  const [ links, setLinks ] = useState<PostLinks>({ postStore: postStoreLink } as any)
+export const PostStoreProvider = ({ links, children }: React.PropsWithChildren<PostProviderProps>) => {
+  const [ state, setState ] = useState<PostStoreContextType>()
   const { orbitdb } = useOrbitDbContext()
-
-  console.log(links)
 
   useEffect(() => {
 
@@ -87,9 +83,9 @@ export const PostStoreProvider = ({ postStoreLink, children }: React.PropsWithCh
 
       await postStore.load()
 
-      console.log('After init post counter')
+      console.log('Succes connect to post store by link: ', links.postStore)
 
-      setState({ postStore, nextPostId, postsPath: (postStore as any).id, isReady: true })
+      setState({ postStore, nextPostId, postsPath: (postStore as any).id })
 
     }
     init()
@@ -102,21 +98,14 @@ export const PostStoreProvider = ({ postStoreLink, children }: React.PropsWithCh
 
   return state
     ? <PostStoreContext.Provider
-        value={{
-          ...state,
-          setLinksFromSpace: ({ links }: SpaceDto) => setLinks({ ...links })
-        }}>
+        value={state}>
           {children}
       </PostStoreContext.Provider>
     : <Loading label='Initialization post context'/>
   }
 
-const PostStoreProviderWithSpaceId = ({ children }: React.PropsWithChildren<{}>): JSX.Element | null => {
+export const PostStoreProviderWithLinks = ({ children }: React.PropsWithChildren<{}>): JSX.Element | null => {
   const { query } = useRouter()
 
-  if (!query.spaceId) return <>{children}</>;
-
-  return <PostStoreProvider postStoreLink={createPostLink(query as any)}>{children}</PostStoreProvider>
+  return <PostStoreProvider links={{ postStore: createPostLink(query as any) }}>{children}</PostStoreProvider>
 }
-
-export default PostStoreProviderWithSpaceId

@@ -54,9 +54,9 @@ export const FollowSpaceStoreProvider = (props: React.PropsWithChildren<{}>) => 
   }
 
 const FollowSpaceStoreWrapper =  ({ children }: React.PropsWithChildren<{}>): JSX.Element | null => {
-  const { query: { postId } } = useRouter()
+  const { query: { postId }, pathname } = useRouter()
 
-  if (postId) return <>{children}</>;
+  if (postId || pathname.includes('new')) return <>{children}</>;
 
   return <FollowSpaceStoreProvider>{children}</FollowSpaceStoreProvider>
 }

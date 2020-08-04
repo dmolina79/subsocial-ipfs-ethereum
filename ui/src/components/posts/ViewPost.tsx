@@ -10,9 +10,11 @@ import moment from 'moment';
 import { toShortAddress, summarize, DfBgImg, IconText, DEFAULT_PATH, Loading } from '../utils';
 import Jdenticon from 'react-jdenticon';
 import { useRouter } from 'next/router';
-import { usePostStoreContext } from './PostsContext';
+import { usePostStoreContext, PostStoreProviderWithLinks } from './PostsContext';
 import { Player } from './DPlayer';
-import { useCommentsContext } from '../comments/СommentContext';
+import { useCommentsContext, CommentsProvider } from '../comments/СommentContext';
+import { useOrbitDbContext, openIdCounter } from '../orbitdb';
+import CounterStore from 'orbit-db-counterstore';
 
 type ViewPostProps = {
   post: PostDto
@@ -25,8 +27,7 @@ type PostLinkProps = {
   style?: CSSProperties
 }
 const PostLink = ({ path, children, className, style }: PostLinkProps) => <Link
-    href={`${DEFAULT_PATH}/[spaceId]/posts/[postId]`}
-    as={path}
+    href={path}
   >
     <a className={className} style={style}>
       {children}
@@ -38,38 +39,44 @@ type InnerViewPostProps = ViewPostProps & {
   children?: React.ReactNode
 }
 
-// const useTotalCommentCount = (postId: string) => {
-//   const [ count, setCount ] = useState(0)
-//   const { orbitdb } = useOrbitDbContext()
+const useTotalCommentCount = (addCounterLink: string) => {
+  const [ count, setCount ] = useState(0)
+  const { orbitdb } = useOrbitDbContext()
 
 
-//   useEffect(() => {
+  useEffect(() => {
+    let addCommentCount: CounterStore;
     
-//     const getCount = async () => {
+    const getCount = async () => {
+      console.log('Before init comment counter')
 
-//       const addCommentCount = await orbitdb.counter(`add_comment_counter_${postId}`)
-//       console.log('After init comment counter')
-//       const delCommentCount = await orbitdb.counter(`del_comment_counter_${postId}`)
-//       await addCommentCount.load()
-//       await delCommentCount.load()
+      addCommentCount = await openIdCounter(orbitdb, addCounterLink)
+      console.log('After init comment counter')
+      // const delCommentCount = await orbitdb.counter(`del_comment_counter_${postId}`)
+      await addCommentCount.load()
+      // await delCommentCount.load()
+      setCount(addCommentCount.value)
 
-//       setCount(addCommentCount.value - delCommentCount.value)
+      addCommentCount.close()
+      // delCommentCount.close()
+    }
 
-//       addCommentCount.close()
-//       delCommentCount.close()
-//     }
+    getCount().catch(err => console.error(err))
 
-//     getCount().catch(err => console.error(err))
+    // return () => {
+    //   addCommentCount && addCommentCount.close()
+    // }
 
-//   }, [])
+  }, [])
 
-//   return count
-// }
+  return count
+}
 
-export const InnerViewPost = ({ post: { created, owner, path }, preview, children }: InnerViewPostProps) => {
+export const InnerViewPost = ({ post: { created, owner, path, links }, preview, children }: InnerViewPostProps) => {
   const time = moment(created.time)
-  const totalCommentCount = useCommentsContext().state.totalCommentCount
-
+  const totalCommentCount = preview
+    ? useTotalCommentCount(links.addCounter)
+    : useCommentsContext().state.totalCommentCount
 
   return <List.Item
     key={created.time}
@@ -150,26 +157,27 @@ const PostPage: NextPage<ViewPostProps> = ({ post }: ViewPostProps) => {
 }
 
 export const DynamicPost = () => {
-  const { postStore, isReady } = usePostStoreContext()
+  const { postStore } = usePostStoreContext()
   const [ post, setPost ] = useState<PostDto | undefined>()
   const [ isLoaded, setLoaded ] = useState(false)
   const { query: { postId } } = useRouter()
 
   useEffect(() => {
-    if (!isReady) return
     const loadPosts = async () => {
       const post = await postStore.get(postId).pop()
       post && setPost(post)
       setLoaded(true)
     }
     loadPosts().catch(err => console.error(err))
-  }, [ postId, isReady ])
+  }, [ postId ])
 
-  if (!isLoaded || !isReady) return <Loading label='Loading post...' />
+  if (!isLoaded) return <Loading label='Loading post...' />
 
   return post
-    ? <PostPage post={post} />
+    ? <CommentsProvider links={post.links}>
+        <PostPage post={post} />
+      </CommentsProvider>
     : <Empty description='Post not found' />
 }
 
-export default DynamicPost
+export default () => <PostStoreProviderWithLinks><DynamicPost /></PostStoreProviderWithLinks>

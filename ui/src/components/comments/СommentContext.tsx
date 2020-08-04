@@ -1,9 +1,9 @@
 import React, { useContext, createContext, useState, useEffect } from 'react';
 import { CommentDto, CommentValue, CommentsProviderProps } from './types';
-import { useOrbitDbContext } from '../orbitdb';
+import { useOrbitDbContext, openIdCounter } from '../orbitdb';
 import FeedStore from 'orbit-db-feedstore';
-import { useRouter } from 'next/router';
 import CounterStore from 'orbit-db-counterstore';
+import OrbitDB from 'orbit-db';
 
 function functionStub() {
   throw new Error('Function needs to be set in SubsocialApiProvider')
@@ -47,12 +47,43 @@ const initialContext: CommentsContextType = {
   onCommentAdded: functionStub
 }
 
+export const createCommentCounter = async (
+  orbitdb: OrbitDB,
+  postPath: string,
+  type: 'add' | 'del'
+) => orbitdb.create(`${postPath}/${type}_comment_counter`, 'counter', {
+  accessController: {
+    write: [
+      '*' // Anyone can write
+      // Give access to ourselves
+      // orbitdb.identity.id,
+      // Give access to the second peer
+      // peerId
+    ]
+  },
+}) as Promise<CounterStore>
+
+export const createCommentStore = async (
+  orbitdb: OrbitDB,
+  postPath: string
+) => orbitdb.create(`${postPath}/comments`, 'feed', {
+  accessController: {
+    write: [
+      '*' // Anyone can write
+      // Give access to ourselves
+      // orbitdb.identity.id,
+      // Give access to the second peer
+      // peerId
+    ]
+  }
+}) as Promise<CommentStore>
+
 export const CommentsContext = createContext<CommentsContextType>(initialContext);
 
 export const useCommentsContext = () =>
   useContext(CommentsContext)
 
-export const CommentsProvider = ({ postId, spaceId, children }: React.PropsWithChildren<CommentsProviderProps>) => {
+export const CommentsProvider = ({ links: { delCounter, addCounter, commentStore: commentStoreLink }, children }: React.PropsWithChildren<CommentsProviderProps>) => {
   const [comments, setComments] = useState<CommentDto[]>(initialContext.state.comments)
   const [repliesIdsById] = useState<Map<string, string[]>>(initMap())
   const [commentById] = useState<Map<string, CommentDto>>(initMap())
@@ -96,31 +127,25 @@ export const CommentsProvider = ({ postId, spaceId, children }: React.PropsWithC
   useEffect(() => {
 
     let addCommentCount: CounterStore;
-    let delCommentCount: CounterStore;
+    // let delCommentCount: CounterStore;
     let commentStore: CommentStore;
 
     const initAllComments = async () => {
-      console.log('Before init comment counter')
-      addCommentCount = await orbitdb.counter(`spaces/${spaceId}/posts/${postId}/add_comment_counter`)
-      delCommentCount = await orbitdb.counter(`spaces/${spaceId}/posts/${postId}/del_comment_counter`)
+      console.log('Before init comment stores')
+      addCommentCount = await openIdCounter(orbitdb, addCounter)
+      // delCommentCount = await openIdCounter(orbitdb, delCounter)
       await addCommentCount.load()
-      await delCommentCount.load()
+      // await delCommentCount.load()
   
-      setTotalCommentCount(addCommentCount.value - delCommentCount.value)
-  
-      console.log('After init comment counter')
+      setTotalCommentCount(addCommentCount.value /* - delCommentCount.value*/)
       
-      commentStore = await orbitdb.open(`spaces/${spaceId}/posts/${postId}/comments`, {
-        create: true,
+      commentStore = await orbitdb.open(commentStoreLink, {
         type: 'feed',
-        replicate: true
       }) as CommentStore
   
       await commentStore.load();
     
       setCommentStore(commentStore)
-
-      console.log('After init comment counter')
 
         commentStore.events.on('write', async (address, entry, heads) => {
           switch (entry.payload.op) {
@@ -128,14 +153,16 @@ export const CommentsProvider = ({ postId, spaceId, children }: React.PropsWithC
               await addCommentCount.inc()
               break;
             }
-            case 'DEL': {
-              await delCommentCount.inc()
-              break;
-            }
+            // case 'DEL': {
+            //   await delCommentCount.inc()
+            //   break;
+            // }
           }
     
-          setTotalCommentCount(addCommentCount.value - delCommentCount.value)
+          setTotalCommentCount(addCommentCount.value /* - delCommentCount.value */)
         });
+
+        console.log('After init comment stores')
 
 
       loadAllComments(commentStore)
@@ -145,9 +172,11 @@ export const CommentsProvider = ({ postId, spaceId, children }: React.PropsWithC
     initAllComments()
 
     return () => {
-
+      addCommentCount && addCommentCount.close()
+      // delCommentCount && delCommentCount.close()
+      commentStore && commentStore.close()
     }
-  }, [ postId ])
+  }, [ addCounter, delCounter, commentStoreLink ])
 
   return <CommentsContext.Provider value={{
     state: {
@@ -177,13 +206,4 @@ export const useGetRepliesById = (id: string): CommentDto[] => {
 
 export const useGetRootComments = () => useGetRepliesById('null')
 
-const CommentsProviderWithPostId = ({ children }: React.PropsWithChildren<{}>) => {
-  const { spaceId, postId } = useRouter().query
-
-  if (!postId || !spaceId) return children;
-
-  return <CommentsProvider postId={postId as string} spaceId={spaceId as string}>{children}</CommentsProvider>
-}
-
-export default CommentsProviderWithPostId
 

@@ -6,7 +6,7 @@ export type SpaceContent = {
 
 export type PostLinks = {
   postStore: string,
-  postIdCounter: string
+  postIdCounter?: string
 }
 
 export type SpaceDto = {
