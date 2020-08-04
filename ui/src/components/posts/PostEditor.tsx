@@ -9,7 +9,7 @@ import { useOrbitDbContext } from '../orbitdb'
 import { usePostStoreContext } from './PostsContext'
 import { BucketDragDrop } from '../drag-drop'
 import { FormInstance } from 'antd/lib/form'
-import { withLoadSpaceFromUrl } from '../spaces/ViewSpace'
+import { withLoadSpaceFromMyStore } from '../spaces/ViewSpace'
 import { useSpaceStoreContext } from '../spaces/SpaceContext'
 import { createCommentStore, createCommentCounter } from '../comments/СommentContext'
 
@@ -265,7 +265,7 @@ function LoadPostThenEdit (props: FormProps) {
   </>
 }
 
-export const NewPost = withLoadSpaceFromUrl((props) => {
+export const NewPost = withLoadSpaceFromMyStore((props) => {
   return (<>
     <h2>New post</h2>
     <Tabs defaultActiveKey="status" type="card" size='large'>
@@ -286,6 +286,6 @@ export const NewPost = withLoadSpaceFromUrl((props) => {
 );
 })
 
-export const EditPost = withLoadSpaceFromUrl(LoadPostThenEdit)
+export const EditPost = withLoadSpaceFromMyStore(LoadPostThenEdit)
 
-export default withLoadSpaceFromUrl(NewPost)
+export default withLoadSpaceFromMyStore(NewPost)

@@ -4,7 +4,7 @@ import { SpaceDto } from './types';
 import { Loading, IconText, DEFAULT_PATH } from '../utils';
 import { Avatar, Empty, Card } from 'antd';
 import { NextPage } from 'next';
-import { useSpaceStoreContext } from './SpaceContext';
+import { SpaceStore, useSpaceStoreContext } from './SpaceContext';
 import Jdenticon from 'react-jdenticon';
 import DynamicPosts from '../posts/Posts';
 import Link from 'next/link';
@@ -13,6 +13,7 @@ import Meta from 'antd/lib/card/Meta';
 import { EditOutlined } from '@ant-design/icons';
 import { FollowSpaceButton } from './FollowSpaceButton';
 import { PostStoreProvider } from '../posts/PostsContext';
+import { useOrbitDbContext, openStore } from '../orbitdb';
 
 type ViewSpaceProps = {
   space: SpaceDto,
@@ -68,6 +69,42 @@ const SpacePage: NextPage<ViewSpaceProps> = ({ space }: ViewSpaceProps) => {
 }
 
 export function withLoadSpaceFromUrl (
+  Component: React.ComponentType<ViewSpaceProps>
+) {
+  return function (): React.ReactElement<ViewSpaceProps> {
+    const { orbitdb } = useOrbitDbContext()
+    // const { spaceStore, spacesPath } = useSpaceStoreContext()
+    const spaceId = useRouter().query.spaceId as string
+    const [ isLoaded, setIsLoaded ] = React.useState(false)
+    const [ space, setSpace ] = React.useState<SpaceDto>()
+    const { asPath } = useRouter()
+
+    React.useEffect(() => {
+      const loadSpace = async () => {
+        const path = asPath.substr(0, asPath.length - 2)
+        console.log(path)
+        const spaceStore = await openStore<SpaceStore>(orbitdb, path)
+        await spaceStore.load()
+        const space = await spaceStore.get(spaceId).pop()
+        if (space) {
+          setSpace(space)
+        }
+        await spaceStore.close()
+        console.log('Success closing space store')
+        setIsLoaded(true)
+      }
+      loadSpace().catch(err => console.error('Failed load space from OrbitDB:', err))
+    }, [])
+
+    if (!isLoaded) return <Loading label='Loading the space...' />
+
+    if (!space) return <Empty description='Space not found' />
+
+    return <PostStoreProvider links={space.links}><Component space={space} /></PostStoreProvider>
+  }
+}
+// TODO copypasta!!!
+export function withLoadSpaceFromMyStore (
   Component: React.ComponentType<ViewSpaceProps>
 ) {
   return function (): React.ReactElement<ViewSpaceProps> {

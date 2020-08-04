@@ -4,11 +4,11 @@ import { useRouter } from 'next/router'
 import { SpaceDto, SpaceContent } from './types'
 import TextArea from 'antd/lib/input/TextArea'
 import { maxLenError, minLenError, TITLE_MIN_LEN, TITLE_MAX_LEN, DESC_MAX_LEN, DEFAULT_PATH, getIdFromFullPath, pathToDbName } from '../utils'
-import { useOrbitDbContext } from '../orbitdb'
+import { useOrbitDbContext, openStore, openIdCounter } from '../orbitdb'
 import { useSpaceStoreContext } from './SpaceContext'
 import { BucketDragDrop } from '../drag-drop'
 import { FormInstance } from 'antd/lib/form'
-import { createPostStore, createPostIdCounter } from '../posts/PostsContext'
+import { PostStore } from '../posts/PostsContext'
 
 const layout = {
   labelCol: { span: 4 },
@@ -105,8 +105,8 @@ export function InnerForm (props: FormProps) {
 
       const dbName = pathToDbName(spacesPath, spaceId)
 
-      const postStore = await createPostStore(orbitdb, dbName)
-      const postIdCouter = await createPostIdCounter(orbitdb, dbName)
+      const postStore = await openStore<PostStore>(orbitdb, `${dbName}/posts`)
+      const postIdCouter = await openIdCounter(orbitdb, `${dbName}/next_post_id`)
   
       newSpace = {
         path: `${spacesPath}/${spaceId}`,
@@ -121,6 +121,8 @@ export function InnerForm (props: FormProps) {
           postIdCounter: postIdCouter.id
         }
       }
+
+      console.log('Space:', newSpace)
 
       postStore.close()
       postIdCouter.close()
