@@ -27,11 +27,9 @@ export const Comments = () => {
   const comments = useGetRootComments()
 
   return <>
-    <h3 className='border-top pt-3'>{pluralize(totalCommentCount, 'comment')}</h3>
+    <h3>{pluralize(totalCommentCount, 'comment')}</h3>
     <CommentEditor onCommentAdded={onCommentAdded} />
-    <CommentList
-      comments={comments}
-    />
+    <CommentList comments={comments} />
   </> 
 }
 

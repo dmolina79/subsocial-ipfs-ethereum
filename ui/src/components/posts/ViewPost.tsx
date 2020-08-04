@@ -89,6 +89,7 @@ export const InnerViewPost = ({ post: { created, owner, path, links }, preview, 
       </Link>
     ]}
     extra={preview}
+    className='PostItem'
   >
     <List.Item.Meta
       avatar={<Avatar icon={<Jdenticon value={owner}/>} />}
@@ -98,7 +99,6 @@ export const InnerViewPost = ({ post: { created, owner, path, links }, preview, 
           <PostLink path={path} style={{ color: '#8c8c8c', fontSize: '.85rem' }}>{time.fromNow()}</PostLink>
         </Tooltip>
       </span>}
-      // style={{ marginBottom: '0' }}
     />
     {children}
   </List.Item>
