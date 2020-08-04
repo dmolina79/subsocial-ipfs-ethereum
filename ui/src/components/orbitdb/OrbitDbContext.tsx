@@ -58,16 +58,9 @@ export const OrbitDbProvider = (props: React.PropsWithChildren<{}>) => {
 
 export default OrbitDbProvider
 
-export const openIdCounter = async (orbitdb: OrbitDB, path: string) => await orbitdb.open(path, {
-  create: true,
-  type: 'counter',
-}) as CounterStore
+export const openIdCounter = async (orbitdb: OrbitDB, path: string) => await orbitdb.counter(path) as CounterStore
 
-export const openStore = async <T extends PostStore | SpaceStore | CommentStore>(orbitdb: OrbitDB, path: string) => await orbitdb.open(path, {
-  create: true,  
-  type: 'docstore',
-  indexBy: 'path'
-} as any) as T
+export const openStore = async <T extends PostStore | SpaceStore | CommentStore>(orbitdb: OrbitDB, path: string) => await orbitdb.docs(path, { indexBy: 'path' } as any) as T
 
 // export const getPostStore = async () => {
 //   if (postStore) return postStore;
