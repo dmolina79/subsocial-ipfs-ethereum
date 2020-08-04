@@ -33,8 +33,8 @@ export const PageLayout = ({ children }: React.PropsWithChildren<{}>) => {
         {bucketStatus}
       </>}
       extra={[
-        <Link href='/myspaces' as='/myspaces'><a className='ant-btn'>My spaces</a></Link>,
-        <Link href='/myspaces/follow' as='/myspaces/follow'><a className='ant-btn'>My subscriptions</a></Link>
+        <Link key='mySpaces' href='/myspaces' as='/myspaces'><a className='ant-btn'>My spaces</a></Link>,
+        <Link key='mySubs' href='/myspaces/follow' as='/myspaces/follow'><a className='ant-btn'>My subscriptions</a></Link>
       ]}
       style={{ borderBottom: '1px solid #ddd' }}
       onBack={() => router.push('/', '/')}

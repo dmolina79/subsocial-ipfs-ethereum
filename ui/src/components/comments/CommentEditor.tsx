@@ -18,7 +18,7 @@ const Editor = ({ onChange, onSubmit, submitting, value = '' }: EditorProps) => 
   const { state: { isReady } } = useCommentsContext()
   return <>
     <Form.Item>
-      <TextArea rows={4} onChange={onChange} value={value} />
+      <TextArea rows={3} onChange={onChange} value={value} placeholder='Write a public comment...' />
     </Form.Item>
     <Form.Item>
       <Button htmlType="submit" loading={submitting || !isReady} disabled={!isReady} onClick={onSubmit} type="primary">

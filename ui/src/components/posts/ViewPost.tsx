@@ -4,7 +4,7 @@ import React, { useState, useEffect, CSSProperties } from 'react';
 import { Comments } from '../comments/Comments';
 import { NextPage } from 'next';
 import Link from 'next/link'
-import { PostDto } from './types';
+import { PostDto, AllValues } from './types';
 import { PostsList } from './Posts';
 import moment from 'moment';
 import { toShortAddress, summarize, DfBgImg, IconText, DEFAULT_PATH, Loading } from '../utils';
@@ -104,11 +104,20 @@ export const InnerViewPost = ({ post: { created, owner, path, links }, preview, 
   </List.Item>
 }
 
-export const ViewPostPage = ({ post }: ViewPostProps) => {
-  const { content: { body, title, image, video } } = post
-  const previewUrl = image?.replace('original', 'preview')
+const Title = ({ title }: Pick<AllValues, 'title'>) =>
+  title ? <h2 className='mb-2'>{title}</h2> : null
 
-  const Title = () => title ? <h2 className='mb-2'>{title}</h2> : null
+const Body = (props: Pick<AllValues, 'title' | 'body'>) => {
+  const { title, body } = props
+  const shortStatus = !title && body && body.length <= 140
+  return <div>{shortStatus ? <h2>{body}</h2> : body}</div>
+}
+
+export const ViewPostPage = ({ post }: ViewPostProps) => {
+  const { content } = post
+  const { title, image, video } = content
+
+  const previewUrl = image?.replace('original', 'preview')
 
   const Video = () => !video ? null : (
     <div className='PostVideo'>
@@ -120,26 +129,28 @@ export const ViewPostPage = ({ post }: ViewPostProps) => {
   
   return <InnerViewPost post={post}>
     <div className='card'>
-      <Title />
+      <Title {...content} />
       <Video />
       <Image />
-      <div>{body}</div>
+      <Body {...content} />
     </div>
   </InnerViewPost>
 }
 
 export const ViewPostPreview = ({ post }: ViewPostProps) => {
-  const { content: { body, title, image }, path } = post
+  const { content, path } = post
+  const { body, image } = content
 
   const previewUrl = image?.replace('original', 'preview')
-  const Title = () => title ? <h2>{title}</h2> : null
 
-  return <InnerViewPost post={post} preview={previewUrl ? <DfBgImg src={previewUrl} size={272} height={220} /> : null}>
+  const preview = previewUrl ? <DfBgImg src={previewUrl} size={272} height={220} /> : null
+
+  return <InnerViewPost post={post} preview={preview}>
     <PostLink style={{ color: '#222' }} path={path}>
-      <Title />
-      <div style={{ minHeight: 135 }}>{summarize(body)}</div>
+      <Title {...content} />
+      <Body {...content} body={summarize(body)} />
     </PostLink>
-</InnerViewPost>
+  </InnerViewPost>
 }
 
 export const ViewPost = ({ post }: ViewPostProps) => {

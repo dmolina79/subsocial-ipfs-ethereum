@@ -124,8 +124,8 @@ export const IconText = ({ icon, text }: IconTextProps) => (
 );
 
 export const statusTag = (title: string, isReady: boolean) => isReady
-  ? <Tag color="green">{`${title} READY`}</Tag>
-  : <Tag color="red">{`${title} connecting...`}</Tag>
+  ? <Tag color="green">{`${title} Ready`}</Tag>
+  : <Tag color="volcano">{`${title} Connecting...`}</Tag>
 
 export const getIdFromFullPath = (path: string) => path.charAt(path.length-1)
 
