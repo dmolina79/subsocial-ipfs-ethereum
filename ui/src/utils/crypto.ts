@@ -1,5 +1,5 @@
 import nacl from 'tweetnacl'
-import { base64ToBytes, bytesToBase64, utf8ToBytes } from '../utils/codecs'
+import { base64ToBytes, bytesToBase64, utf8ToBytes } from './codecs'
 
 // TODO throw error if not defined
 const apiSecretKey = process.env.BOX_SECRET_KEY_BASE64 as string

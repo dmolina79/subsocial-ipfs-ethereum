@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { returnOk, returnServerError } from '../utils/next'
+import { returnOk, returnServerError } from '../../../utils/next'
 
 const publicKey = process.env.BOX_PUBLIC_KEY_BASE64
 

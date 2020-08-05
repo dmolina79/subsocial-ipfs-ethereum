@@ -1,10 +1,10 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { returnOk, returnServerError, newRequireParam, returnClientError } from '../utils/next'
 import path from 'path'
 import fs from 'fs'
 import { promisify } from 'util'
-import { web3 } from '../utils/web3'
-import { decryptSecret, encryptSecret } from '../utils/crypto'
+import { returnOk, returnServerError, newRequireParam, returnClientError } from '../../../utils/next'
+import { web3 } from '../../../utils/web3'
+import { decryptSecret, encryptSecret } from '../../../utils/crypto'
 
 const secretsDir = process.env.SECRETS_DIR || path.join(process.env.PWD || '~', '.secrets')
 
