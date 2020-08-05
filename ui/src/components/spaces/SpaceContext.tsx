@@ -74,9 +74,9 @@ export const SpaceStoreProvider = ({ spaceStoreLink, children }: React.PropsWith
 
 
 const SpaceStoreWrapper = ({ children }: React.PropsWithChildren<{}>): JSX.Element | null => {
-  const { pathname, query } = useRouter()
+  const { pathname } = useRouter()
 
-  if (query.postId || !pathname.includes('spaces')) return <>{children}</>;
+  if (!pathname.includes('spaces')) return <>{children}</>;
 
   const spaceStoreLink = localStorage.getItem(MY_SPACES_STORE)
 
