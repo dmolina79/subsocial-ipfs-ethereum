@@ -106,10 +106,12 @@ type LoadingProps = {
   className?: string
 }
 
-export const Loading = ({ label, className }: LoadingProps) => <div className={`d-flex mt-3 justify-content-center ${className}`}>
-  <LoadingOutlined className='mr-3' />
-  {label}
-</div>
+export const Loading = ({ label, className }: LoadingProps) => <div className='Loading d-flex align-items-center justify-content-center'>
+    <div className={className}>
+      <LoadingOutlined className='mr-3' />
+      {label}
+    </div>
+  </div>
 
 type IconTextProps = {
   icon: React.FunctionComponent,
