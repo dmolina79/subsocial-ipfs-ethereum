@@ -6,6 +6,7 @@ import { statusTag } from '../components/utils';
 import { useBucketContext } from '../components/buckets/BucketsContext';
 import { useOrbitDbContext } from '../components/orbitdb';
 import Link from 'next/link';
+import { FillerInput } from '../components/filler/Input';
 
 type EntityStatusProps = {
   title: string,
@@ -34,7 +35,8 @@ export const PageLayout = ({ children }: React.PropsWithChildren<{}>) => {
       </>}
       extra={[
         <Link key='mySpaces' href='/myspaces' as='/myspaces'><a className='ant-btn'>My spaces</a></Link>,
-        <Link key='mySubs' href='/myspaces/follow' as='/myspaces/follow'><a className='ant-btn'>My subscriptions</a></Link>
+        <Link key='mySubs' href='/myspaces/follow' as='/myspaces/follow'><a className='ant-btn'>My subscriptions</a></Link>,
+        isAppReady && <FillerInput key='filler' />
       ]}
       style={{ borderBottom: '1px solid #ddd' }}
       onBack={() => router.push('/', '/')}
