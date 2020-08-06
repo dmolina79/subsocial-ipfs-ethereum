@@ -33,7 +33,7 @@ export const FollowSpaceButton = ({ space: { path, links } }: FollowSpaceButton)
   }, [])
 
   const onFollow = async () => {
-    await followSpaceStore.put({ spacePath: path, lastKnownPostId: 0, links })
+    await followSpaceStore.put({ spacePath: path, lastKnownPostId: 0, links: { ...links } })
     setFollow(true)
   }
 

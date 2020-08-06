@@ -26,7 +26,7 @@ export type AllValues = {
 }
 export type CommentsLinks = {
   addCounter: string,
-  delCounter:string,
+  delCounter?:string,
   commentStore: string
 }
 

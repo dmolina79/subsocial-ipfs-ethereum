@@ -106,10 +106,12 @@ type LoadingProps = {
   className?: string
 }
 
-export const Loading = ({ label, className }: LoadingProps) => <div className={`d-flex mt-3 justify-content-center ${className}`}>
-  <LoadingOutlined className='mr-3' />
-  {label}
-</div>
+export const Loading = ({ label, className }: LoadingProps) => <div className='Loading d-flex align-items-center justify-content-center'>
+    <div className={className}>
+      <LoadingOutlined className='mr-3' />
+      {label}
+    </div>
+  </div>
 
 type IconTextProps = {
   icon: React.FunctionComponent,
@@ -151,3 +153,13 @@ export const createSpaceLink = ({ hash }: CreateLink) => `/orbitdb/${hash}/space
 export const createPostLink = ({ hash, spaceId }: CreateLink) => `/orbitdb/${hash}/spaces/${spaceId}/posts`
 
 export const pathToDbName = (path: string, id: string) => `${path.split('/').slice(3).join('/')}/${id}`
+
+export const parseFullPath = (path: string) => {
+  const pathArr = path.split('/')
+  const id = pathArr.pop()
+  const newPath = pathArr.join('/')
+  return {
+    path: newPath,
+    id
+  }
+}

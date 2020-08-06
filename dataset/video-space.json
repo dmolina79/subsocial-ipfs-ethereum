@@ -1,0 +1,56 @@
+{
+  "spaces": [
+    {
+      "space": {
+        "title": "IPFS videos",
+        "desc": "Looking for a good introduction to IPFS, the latest open meetings from IPFS working groups, or content from IPFS Camp? Find all of these — and more!",
+        "avatar": "https://hub.textile.io/thread/bafkw5jxu45irqphoobfkcvi4aq6dr3z5l55fpacybb7no7rtaqny4ty/buckets/bafzbeidg46qlhqc4d46wa4bhguzchdmamqzymvuir432ffa25tmo4ounsa/images/QmagG1qbwivfKgrNTr2efY4KMu4k12jZYoXSdVdmnd4654-preview.png"
+      },
+      "posts": [
+        {
+          "post": {
+            "title": "Fast IPNS - Adin Schmahmann",
+            "body": "Let Adin introduce you to IPNS, a system for creating and updating mutable links to IPFS content.",
+            "image": "https://hub.textile.io/thread/bafkyptmmyuhi3sbb3odhuel6scpwlvgosu4flue4tasxt5mf5dhpqxq/buckets/bafzbeihzcmv5gt2jfibleaoduy6hdphrgfiv4gi6wxa3s34siuyfvokz2u/images/QmdCg7dzgGN4MDdpdrkLx2sdxKpFZdjn4hYZ2z7ySgqXTE-original.png",
+            "video": "https://hub.textile.io/thread/bafkyptmmyuhi3sbb3odhuel6scpwlvgosu4flue4tasxt5mf5dhpqxq/buckets/bafzbeihzcmv5gt2jfibleaoduy6hdphrgfiv4gi6wxa3s34siuyfvokz2u/videos/Qmegd9U9FPqyHuQFNrx1VfHZ1DxPqgzqzi2tyn25caTFKZ-original.mp4"
+          },
+          "comments": [
+            {
+              "body": "Is there a document somewhere that covers this? Still a little confused on what's happening in the video, but very interested in it.",
+              "replies": [
+                "See https://github.com/ipfs/go-ipfs/issues/6447 for the meta tracking issue for IPNS over PubSub"
+              ]
+            }
+          ]
+        },         {
+          "post": {
+            "title": "A quick look: the pinning API proposal - Adrian Lanzafame",
+            "image": "https://hub.textile.io/thread/bafkyptmmyuhi3sbb3odhuel6scpwlvgosu4flue4tasxt5mf5dhpqxq/buckets/bafzbeihzcmv5gt2jfibleaoduy6hdphrgfiv4gi6wxa3s34siuyfvokz2u/images/QmXCFEs5sBnrZAQUUmdCvpRrL5rtDU59JkLkfStGJogF72-original.png",
+            "video": "https://hub.textile.io/thread/bafkyptmmyuhi3sbb3odhuel6scpwlvgosu4flue4tasxt5mf5dhpqxq/buckets/bafzbeihzcmv5gt2jfibleaoduy6hdphrgfiv4gi6wxa3s34siuyfvokz2u/videos/QmYJTUrwBe9pvdAPScd7rbpNNak6hwVdrj6q4dDGkmSzXm-original.mp4"
+          },
+          "comments": [
+            {
+              "body": "You missed the key point of the Title, Storing Digital Assets, since this mostly repeats what ethereum is and how to use it in its simplest form. you talked about crypto, but in all tense and purposes, this is allocating a counter to and individual, a coin or counter is created, then the owner passes this to a wallet address, the transaction history shows they received it. but storing digital assets refers to physical world assets, you would need to assign a hash or other identifier that can be relayed to the real world, and then passed from wallet address to wallet address. but what format would this asset key be? If you create a smart contract and call it, my paintings, then each count, coin or hash would be referred to a different owner, then when ownership changes, this would be passed as a transaction. What I am interested in is the best practice in this area. for example, do we create a smart contract for a single asset, and just pass the owner around? or do we create a contract of paintings, assign a value, and pass the value around?",
+              "replies": []
+            },
+            {
+              "body": "Very good write-up and helpful",
+              "replies": []
+            },
+            {
+              "body": "Thanks for sharing — definitely helpful for people trying to take total control over their personal finance.",
+              "replies": []
+            }
+          ]
+        },         {
+          "post": {
+            "title": "Inter Planetary Data Feed (IPDF) - Irakli Gozalishvili",
+           "image": "https://hub.textile.io/thread/bafk3wyhd525225kark5ufbdcegqdwgsrm7jxneykkjomd3chhac3yda/buckets/bafzbeifavaodrqar6svdorynstivxhbi43ktywhygdv34xop7zfxhxwydm/images/QmWkKcQFUaN7uvy8UH25Qj9dnAta8pxjicZ8fQJ2jHa7AK-original.png",
+            "video": "https://hub.textile.io/thread/bafkyptmmyuhi3sbb3odhuel6scpwlvgosu4flue4tasxt5mf5dhpqxq/buckets/bafzbeihzcmv5gt2jfibleaoduy6hdphrgfiv4gi6wxa3s34siuyfvokz2u/videos/QmUY6rtNn9SF5R3yaNP5XTHHjThnZV9eoqjRnTihwnmRGa-original.mp4"
+          },
+          "comments": []
+        }
+      ]
+    }
+  ]
+}

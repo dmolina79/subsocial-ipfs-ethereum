@@ -7,7 +7,7 @@ import { BucketProvider } from '../components/buckets/BucketsContext'
 import PageLayout from '../layout/PageLayout'
 import SpaceStoreProvider from '../components/spaces/SpaceContext'
 import FollowSpaceStoreProvider from '../components/spaces/FollowSpaceContext'
-import { EthereumProvider } from '../components/eth/EthereumProvider'
+// import { EthereumProvider } from '../components/eth/EthereumProvider'
 
 import 'antd/dist/antd.css'
 import '../styles/main.less'
@@ -26,9 +26,9 @@ function MyApp (props) {
           <PageLayout>
             <FollowSpaceStoreProvider >
               <SpaceStoreProvider>
-                <EthereumProvider>
-                  <Component {...pageProps} />
-                </EthereumProvider>
+                  {/* <EthereumProvider> */}
+                      <Component {...pageProps} />
+                   {/* </EthereumProvider> */}
               </SpaceStoreProvider>
             </FollowSpaceStoreProvider>
           </PageLayout>
