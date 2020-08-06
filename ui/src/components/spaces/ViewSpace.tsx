@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/router';
 import { SpaceDto } from './types';
-import { Loading, IconText, DEFAULT_PATH } from '../utils';
+import { Loading, IconText, DEFAULT_PATH, createSpaceLink } from '../utils';
 import { Avatar, Empty, Card } from 'antd';
 import { NextPage } from 'next';
 import { SpaceStore, useSpaceStoreContext } from './SpaceContext';
@@ -26,7 +26,7 @@ type SpaceLinkProps = {
   className?: string,
   style?: CSSProperties
 }
-const SpaceLink = ({ path, children, className, style }: SpaceLinkProps) =>
+export const SpaceLink = ({ path, children, className, style }: SpaceLinkProps) =>
   <Link href={`${DEFAULT_PATH}/[spaceId]`} as={path} >
     <a className={className} style={style}>
       {children}
@@ -66,7 +66,7 @@ export const ViewSpace = ({ space, isPreview }: ViewSpaceProps) => {
 const SpacePage: NextPage<ViewSpaceProps> = ({ space }: ViewSpaceProps) => {
   return <div className='SpacePage'>
     <ViewSpace space={space} />
-    <DynamicPosts spacePath={space.path} />
+    <DynamicPosts space={space} />
   </div>
 }
 
@@ -76,18 +76,19 @@ export function withLoadSpaceFromUrl (
   return function (): React.ReactElement<ViewSpaceProps> {
     const { orbitdb } = useOrbitDbContext()
     // const { spaceStore, spacesPath } = useSpaceStoreContext()
-    const spaceId = useRouter().query.spaceId as string
     const [ isLoaded, setIsLoaded ] = React.useState(false)
     const [ space, setSpace ] = React.useState<SpaceDto>()
-    const { asPath } = useRouter()
+    const { query } = useRouter()
 
     React.useEffect(() => {
       const loadSpace = async () => {
-        const path = asPath.substr(0, asPath.length - 2)
+        const path = createSpaceLink(query as any)
         console.log(path)
         const spaceStore = await openStore<SpaceStore>(orbitdb, path)
         await spaceStore.load()
-        const space = await spaceStore.get(spaceId).pop()
+        const spacePath = window.location.pathname;
+        (window as any).spaceStore = spaceStore;
+        const space = await spaceStore.get(spacePath).pop()
         if (space) {
           setSpace(space)
         }

@@ -59,8 +59,10 @@ export const importDataFromJson = async (
 
   const mySpacesStore = localStorage.getItem(MY_SPACES_STORE);
 
-  const spaceCounter = await orbitdb.counter("next_space_id");
+  const spaceCounter = await openIdCounter(orbitdb, "next_space_id");
   await spaceCounter.load();
+
+  console.log('Start with id:', spaceCounter.value)
 
   const spacesStore = await openStore<SpaceStore>(
     orbitdb,
@@ -176,6 +178,5 @@ export const importDataFromJson = async (
     };
 
     await spacesStore.put(newSpace);
-    await spaceCounter.inc();
   }
 };
