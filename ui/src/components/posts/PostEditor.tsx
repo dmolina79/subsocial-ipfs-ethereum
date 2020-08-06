@@ -12,6 +12,7 @@ import { FormInstance } from 'antd/lib/form'
 import { withLoadSpaceFromMyStore } from '../spaces/ViewSpace'
 import { useSpaceStoreContext } from '../spaces/SpaceContext'
 import { createCommentStore, createCommentCounter } from '../comments/СommentContext'
+import { useMyDomain } from '../auth/AuthContext'
 
 const { TabPane } = Tabs;
 
@@ -71,8 +72,9 @@ export function InnerForm (props: FormProps) {
   const [ submitting, setSubmitting ] = useState(false)
   const [ form ] = Form.useForm()
   const router = useRouter()
-
-  const { owner, orbitdb } = useOrbitDbContext()
+  const owner = useMyDomain()
+  const { orbitdb } = useOrbitDbContext()
+  
   const { spacesPath } = useSpaceStoreContext()
   const { postStore, nextPostId, postsPath } = usePostStoreContext()
 
@@ -238,7 +240,7 @@ function LoadPostThenEdit (props: FormProps) {
   const [ isLoaded, setIsLoaded ] = useState(false)
   const [ post, setPost ] = useState<PostDto>()
 
-  const { owner: myAddress } = useOrbitDbContext()
+  const myAddress = useMyDomain()
   const { postStore } = usePostStoreContext()
 
   useEffect(() => {

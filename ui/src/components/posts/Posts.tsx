@@ -6,7 +6,7 @@ import { pluralize, DEFAULT_PATH } from '../utils';
 import Link from 'next/link';
 import { usePostStoreContext } from './PostsContext';
 import { SpaceDto } from '../spaces/types';
-import { useOrbitDbContext } from '../orbitdb';
+import { useMyDomain } from '../auth/AuthContext';
 
 export type PostWithSpace = {
   post: PostDto,
@@ -37,7 +37,7 @@ type DynamicPostsProps = {
 const DynamicPosts = ({ space }: DynamicPostsProps) => {
   const { postStore } = usePostStoreContext()
   const [ posts, setPosts ] = useState<PostDto[] | undefined>()
-  const { owner } = useOrbitDbContext()
+  const owner = useMyDomain()
   const isMySpace = space.owner === owner
 
   useEffect(() => {

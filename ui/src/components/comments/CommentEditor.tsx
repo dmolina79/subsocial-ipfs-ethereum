@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { Comment, Avatar, Form, Button, Input } from 'antd';
 import { CommentDto, CommentValue } from './types';
-import { useOrbitDbContext } from '../orbitdb';
 import { useCommentsContext } from './СommentContext';
 import Jdenticon from 'react-jdenticon';
+import { useMyDomain } from '../auth/AuthContext';
 
 const { TextArea } = Input;
 
@@ -37,8 +37,8 @@ export const CommentEditor = ({ parentId = null, onCommentAdded }: CommentEditor
   const [ submitting, setSubmitting ] = useState(false)
   const [ value, setValue ] = useState('')
 
-  const { owner } = useOrbitDbContext()
   const { state: { commentStore } } = useCommentsContext()
+  const owner = useMyDomain()
 
   const addComment = async (body: string) => {
     const comment: CommentValue = {

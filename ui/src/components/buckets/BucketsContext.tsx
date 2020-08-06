@@ -107,7 +107,6 @@ export const BucketProvider = (props: React.PropsWithChildren<{}>) => {
         const links = await getBucketLinks(buckets, bucketKey);
 
         links && setUrl(links?.url)
-
       }
 
       setReady(true)
@@ -115,7 +114,7 @@ export const BucketProvider = (props: React.PropsWithChildren<{}>) => {
 
     init()
  
-  }, [ ])
+  }, [])
 
   const state = rootPath && buckets ? {
     buckets,

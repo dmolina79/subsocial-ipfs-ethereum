@@ -1,7 +1,7 @@
 import { PostDto, AllValues } from "../posts/types";
 import OrbitDB from "orbit-db";
 import { openStore, openIdCounter } from "../orbitdb";
-import { SpaceStore, MY_SPACES_STORE } from "../spaces/SpaceContext";
+import { SpaceStore } from "../spaces/SpaceContext";
 import { PostStore } from "../posts/PostsContext";
 import { CommentValue } from "../comments/types";
 import { SpaceDto, SpaceContent } from "../spaces/types";
@@ -53,12 +53,9 @@ const mock: SpacesJson = {
 
 export const importDataFromJson = async (
   orbitdb: OrbitDB,
-  { spaces }: SpacesJson = mock
+  { spaces }: SpacesJson = mock,
+  owner: string
 ) => {
-  const owner = (orbitdb as any).identity.id;
-
-  const mySpacesStore = localStorage.getItem(MY_SPACES_STORE);
-
   const spaceCounter = await openIdCounter(orbitdb, "next_space_id");
   await spaceCounter.load();
 
@@ -66,11 +63,9 @@ export const importDataFromJson = async (
 
   const spacesStore = await openStore<SpaceStore>(
     orbitdb,
-    mySpacesStore || "spaces"
+    "spaces"
   );
   const spacesPath = spacesStore.id;
-
-  !mySpacesStore && localStorage.setItem(MY_SPACES_STORE, spacesPath);
 
   for (let spaceIndex = 0; spaceIndex < spaces.length; spaceIndex++) {
     const { space, posts } = spaces[spaceIndex];

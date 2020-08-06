@@ -1,12 +1,13 @@
 import * as React from 'react';
-import { PageHeader, Avatar } from 'antd';
+import { PageHeader } from 'antd';
 import { useRouter } from 'next/router';
-import { statusTag } from '../components/utils';
+import { statusTag, Loading } from '../components/utils';
 import { useBucketContext } from '../components/buckets/BucketsContext';
 import { useOrbitDbContext } from '../components/orbitdb';
 import Link from 'next/link';
 import { FillerInput } from '../components/filler/Input';
-import Jdenticon from 'react-jdenticon';
+import { AuthView } from '../components/auth/AuthView';
+import { useAuthContext } from '../components/auth/AuthContext';
 
 type EntityStatusProps = {
   title: string,
@@ -19,7 +20,8 @@ export const PageLayout = ({ children }: React.PropsWithChildren<{}>) => {
   const router = useRouter()
 
   const { isReady: isBucket } = useBucketContext()
-  const { isReady: isOrbitDb, owner } = useOrbitDbContext()
+  const { isReady: isOrbitDb } = useOrbitDbContext()
+  const { profile } = useAuthContext()
 
   const isAppReady = isBucket && isOrbitDb
 
@@ -34,22 +36,20 @@ export const PageLayout = ({ children }: React.PropsWithChildren<{}>) => {
         {bucketStatus}
       </>}
       extra={[
-        <Link key='myFeed' href='/feed' as='/feed'><a className='ant-btn'>Feed</a></Link>,
-        <Link key='mySubs' href='/subscription' as='/subscription'><a className='ant-btn'>My subscriptions</a></Link>,
-        <Link key='newSpace' href={`/new-space`} as={`/new-space`}><a className='ant-btn'>New space</a></Link>,
-        isAppReady && <FillerInput key='filler' />,
-        isAppReady && <Avatar
-          key='Unstoppabledomains'
-          className='ml-4'
-          icon={<Jdenticon value={owner}/>}
-        />
+        profile && <>
+          <Link key='myFeed' href='/feed' as='/feed'><a className='ant-btn'>Feed</a></Link>,
+          <Link key='mySubs' href='/subscription' as='/subscription'><a className='ant-btn'>My subscriptions</a></Link>,
+          <Link key='newSpace' href={`/new-space`} as={`/new-space`}><a className='ant-btn'>New space</a></Link>,
+          <FillerInput key='filler' />
+        </>,
+        isAppReady && <AuthView key='auth' />
       ]}
       style={{ borderBottom: '1px solid #ddd' }}
       onBack={() => router.push('/', '/')}
       backIcon={<img src={'/subsocial-sign.svg'} width='32' height='32' alt='Subsocial' />}
     />
     <div className='PageContent'>
-      {isAppReady && children}
+      {isAppReady ? children : <Loading label='Initialization app...' />}
     </div>
   </>
 }
