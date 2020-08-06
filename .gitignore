@@ -1,4 +1,6 @@
 ui/src/contracts
+.secrets
+
 .DS_Store
 
 # Logs
