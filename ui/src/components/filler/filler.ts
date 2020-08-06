@@ -1,91 +1,113 @@
-import { PostDto, AllValues } from "../posts/types"
-import OrbitDB from "orbit-db"
-import { openStore, openIdCounter } from "../orbitdb"
-import { SpaceStore, MY_SPACES_STORE } from "../spaces/SpaceContext"
-import { PostStore } from "../posts/PostsContext"
-import { CommentValue } from "../comments/types"
-import { SpaceDto, SpaceContent } from "../spaces/types"
-import { getOwner } from "./utils"
+import { PostDto, AllValues } from "../posts/types";
+import OrbitDB from "orbit-db";
+import { openStore, openIdCounter } from "../orbitdb";
+import { SpaceStore, MY_SPACES_STORE } from "../spaces/SpaceContext";
+import { PostStore } from "../posts/PostsContext";
+import { CommentValue } from "../comments/types";
+import { SpaceDto, SpaceContent } from "../spaces/types";
+import { getOwner } from "./utils";
 
 type CommentJson = {
-  body: string, 
-  replies?: string[]
-}
+  body: string;
+  replies?: string[];
+};
 
 type PostJson = {
-  post: AllValues,
-  comments: CommentJson[]
-}
+  post: AllValues;
+  comments: CommentJson[];
+};
 
 type SpaceJson = {
-  space: SpaceContent,
-  posts: PostJson[]
-}
+  space: SpaceContent;
+  posts: PostJson[];
+};
 
 export type SpacesJson = {
-  spaces: SpaceJson[]
-}
+  spaces: SpaceJson[];
+};
 
 const mock: SpacesJson = {
-  spaces: [{
-    space: {
-      title: 'Test filler title',
-      desc: 'Test filler desc',
-      avatar: null
-    },
-    posts: [{
-      post: {
-        body: 'Test filler status post'
+  spaces: [
+    {
+      space: {
+        title: "Test filler title",
+        desc: "Test filler desc",
+        avatar: null,
       },
-      comments: [{
-        body: 'Test root comment',
-        replies: [ 'Test comment 1', 'Test comment 2', 'Test comment 3' ]
-      }]
-    }]
-  }]
-}
+      posts: [
+        {
+          post: {
+            body: "Test filler status post",
+          },
+          comments: [
+            {
+              body: "Test root comment",
+              replies: ["Test comment 1", "Test comment 2", "Test comment 3"],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
 
-export const importDataFromJson = async (orbitdb: OrbitDB, { spaces }: SpacesJson = mock) => {
-  const owner = (orbitdb as any).identity.id
+export const importDataFromJson = async (
+  orbitdb: OrbitDB,
+  { spaces }: SpacesJson = mock
+) => {
+  const owner = (orbitdb as any).identity.id;
 
-  const mySpacesStore = localStorage.getItem(MY_SPACES_STORE)
-  console.log(mySpacesStore)
-  const spacesStore = await openStore<SpaceStore>(orbitdb, mySpacesStore || 'spaces')
-  const spacesPath = spacesStore.id
+  const mySpacesStore = localStorage.getItem(MY_SPACES_STORE);
 
-  console.log('spacesStore', spacesStore.get(''), spacesPath)
-  !mySpacesStore && localStorage.setItem(MY_SPACES_STORE, spacesPath)
+  const spaceCounter = await orbitdb.counter("next_space_id");
+  await spaceCounter.load();
 
+  const spacesStore = await openStore<SpaceStore>(
+    orbitdb,
+    mySpacesStore || "spaces"
+  );
+  const spacesPath = spacesStore.id;
 
-  console.log(spaces)
+  !mySpacesStore && localStorage.setItem(MY_SPACES_STORE, spacesPath);
 
-  for (let spaceIndex = 0; spaceIndex < spaces.length; spaceIndex++ ) {
-    const { space, posts } = spaces[spaceIndex]
-    const spaceId = spaceIndex + 1;
+  for (let spaceIndex = 0; spaceIndex < spaces.length; spaceIndex++) {
+    const { space, posts } = spaces[spaceIndex];
 
-    const postsCount = posts.length
+    await spaceCounter.inc();
+    const spaceId = spaceCounter.value;
 
-    const spacePath = `${spacesPath}/${spaceId}`
-    const postIdCouter = await openIdCounter(orbitdb, `spaces/${spaceId}/next_post_id`)
-    postIdCouter.inc(postsCount)
-    const postCounterLink = postIdCouter.id
-    await postIdCouter.close()
+    const postsCount = posts.length;
 
-    const postsPath = `spaces/${spaceId}/posts`
+    const spacePath = `${spacesPath}/${spaceId}`;
+    const postIdCouter = await openIdCounter(
+      orbitdb,
+      `spaces/${spaceId}/next_post_id`
+    );
+    await postIdCouter.load();
 
-    const postStore = await openStore<PostStore>(orbitdb, postsPath)
-    const postStoreLink = postStore.id
+    const postCounterLink = postIdCouter.id;
+
+    const postsPath = `spaces/${spaceId}/posts`;
+
+    const postStore = await openStore<PostStore>(orbitdb, postsPath);
+    const postStoreLink = postStore.id;
 
     for (let postIndex = 0; postIndex < postsCount; postIndex++) {
-      const { post, comments } = posts[postIndex]
+      const { post, comments } = posts[postIndex];
 
-      const postId = postIndex + 1
-      let commentCount = comments.length
-      const commentIdCouter = await openIdCounter(orbitdb, `spaces/${spaceId}/posts/${postId}/add_comment_counter`)
-      commentIdCouter.inc(commentCount)
-      const commentCounterLink = commentIdCouter.id
+      await postIdCouter.inc();
+      const postId = postIdCouter.value;
+      let commentCount = comments.length;
+      const commentIdCouter = await openIdCounter(
+        orbitdb,
+        `spaces/${spaceId}/posts/${postId}/add_comment_counter`
+      );
+      commentIdCouter.inc(commentCount);
+      const commentCounterLink = commentIdCouter.id;
 
-      const commentStore = await orbitdb.feed(`${postsPath}/${postId}/comments`)
+      const commentStore = await orbitdb.feed(
+        `${postsPath}/${postId}/comments`
+      );
 
       for (const { body, replies } of comments) {
         const newComment: CommentValue = {
@@ -93,11 +115,11 @@ export const importDataFromJson = async (orbitdb: OrbitDB, { spaces }: SpacesJso
           body: body?.trim(),
           created: {
             account: owner,
-            time: new Date().getTime()
+            time: new Date().getTime(),
           },
-          parentId: null
-        }
-        const parentId = await commentStore.add(newComment)
+          parentId: null,
+        };
+        const parentId = await commentStore.add(newComment);
 
         if (replies) {
           for (const reply of replies) {
@@ -106,57 +128,54 @@ export const importDataFromJson = async (orbitdb: OrbitDB, { spaces }: SpacesJso
               body: reply?.trim(),
               created: {
                 account: owner,
-                time: new Date().getTime()
+                time: new Date().getTime(),
               },
-              parentId: parentId
-            }
-            await commentStore.add(newReply)
-            await commentIdCouter.inc()
+              parentId: parentId,
+            };
+            await commentStore.add(newReply);
+            await commentIdCouter.inc();
           }
         }
-
       }
 
-      await commentIdCouter.close()
-      await commentStore.close()
+      await commentIdCouter.close();
+      await commentStore.close();
 
       const newPost: PostDto = {
         content: post,
         created: {
           account: owner,
-          time: new Date().getTime()
+          time: new Date().getTime(),
         },
         owner,
         path: `${postStoreLink}/${postId}`,
         spacePath,
         links: {
           addCounter: commentCounterLink,
-          commentStore: commentStore.id
-        }
-      }
-      await postStore.put(newPost)
+          commentStore: commentStore.id,
+        },
+      };
+
+      await postStore.put(newPost);
     }
 
-    console.log('postStore', postStore.get(''), postsPath)
-    await postStore.close()
+    await postStore.close();
 
     const newSpace: SpaceDto = {
       content: space,
       created: {
         account: owner,
-        time: new Date().getTime()
+        time: new Date().getTime(),
       },
       owner,
       path: spacePath,
       links: {
         postStore: postStoreLink,
-        postIdCounter: postCounterLink
-      }
-    }
+        postIdCounter: postCounterLink,
+      },
+    };
 
-    await spacesStore.put(newSpace)
+    await spacesStore.put(newSpace);
+    await spaceCounter.inc();
   }
-
-  console.log('spacesStore', spacesStore.get(''), spacesPath)
-
-}
+};

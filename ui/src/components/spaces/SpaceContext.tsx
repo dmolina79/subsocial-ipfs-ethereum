@@ -36,10 +36,7 @@ export const SpaceStoreProvider = ({ spaceStoreLink, children }: React.PropsWith
     async function init() {
 
       console.log('Before init space counter')
-      nextSpaceId = await orbitdb.open('next_space_id', {
-        create: true,
-        type: 'counter'
-      }) as CounterStore
+      nextSpaceId = await orbitdb.counter('next_space_id')
 
       await nextSpaceId.load()
 

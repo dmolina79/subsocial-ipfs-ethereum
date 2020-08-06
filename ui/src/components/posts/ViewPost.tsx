@@ -134,7 +134,9 @@ export const ViewPostPage = (props: ViewPostProps) => {
     <div className='card'>
       <Title {...props} />
       <Video />
-      <Image />
+      <div className='d-flex justify-content-center'>
+        <Image />
+      </div>
       <Body {...props} />
     </div>
   </InnerViewPost>
