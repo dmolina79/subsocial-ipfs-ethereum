@@ -1,5 +1,5 @@
 import nacl from 'tweetnacl'
-import { base64ToBytes, bytesToBase64, utf8ToBytes } from './codecs'
+import { base64ToBytes, bytesToBase64, utf8ToBytes, bytesToUtf8 } from './codecs'
 
 // TODO throw error if not defined
 export const apiPublicKey = process.env.NEXT_PUBLIC_BOX_PUBLIC_KEY_BASE64 as string

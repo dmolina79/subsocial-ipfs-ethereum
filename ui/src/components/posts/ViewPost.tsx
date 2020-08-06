@@ -18,6 +18,13 @@ import CounterStore from 'orbit-db-counterstore';
 import { SpaceDto } from '../spaces/types';
 import { SpaceStore } from '../spaces/SpaceContext';
 import { SpaceLink } from '../spaces/ViewSpace';
+import axios from 'axios'
+import { GetSecretParams, GetSecretRes } from '../../pages/api/secrets/get';
+import { drizzleReactHooks } from '@drizzle/react-plugin'
+import nacl from 'tweetnacl'
+import { bytesToBase64, base64ToBytes, bytesToUtf8 } from '../../utils';
+
+const { useDrizzleState } = drizzleReactHooks
 
 type ViewPostProps = {
   space: SpaceDto,
@@ -119,8 +126,54 @@ const Title = ({ post: { content: { title}, path } }: ViewPostProps) =>
   title ? <h2 className='mb-2'><PostLink path={path}>{title}</PostLink></h2> : null
 
 const Body = ({ post: { content }, preview }: ViewPostProps) => {
-  const { title, body, encrypted } = content
-  if (encrypted) {
+  const { title, encrypted, encryptionNonce, secretHash } = content
+  const [ decryptedContent, setDecryptedContent ] = useState<string>()
+  const drizzleState = useDrizzleState(state => state)
+  const buyerEthAddress = drizzleState.accounts[0]
+
+  const onDecryptContent = async () => {
+    const buyerKeys = nacl.box.keyPair()
+    const buyerPublicKey = bytesToBase64(buyerKeys.publicKey)
+
+    const apiParams: GetSecretParams = {
+      buyerEthAddress,
+      buyerPublicKey,
+      secretHash: secretHash!,
+      signedSecretHash: 'TODO sign a secret hash with buyer ETH addr'
+    }
+  
+    const res = await axios({
+      // method: 'post',
+      url: '/api/secrets/get',
+      params: apiParams
+    })
+
+    console.log('/api/secrets/get:', res)
+
+    if (res.status != 200) return
+
+    const secretEnc = res.data.result as GetSecretRes
+    const secret = nacl.box.open(
+      base64ToBytes(secretEnc.encryptedSecret),
+      base64ToBytes(secretEnc.nonce),
+      base64ToBytes(secretEnc.apiPublicKey),
+      buyerKeys.secretKey
+    )
+
+    if (!secret) return
+
+    const _decryptedContent = nacl.secretbox.open(
+      base64ToBytes(content.body!),
+      base64ToBytes(encryptionNonce!),
+      secret
+    )
+
+    if (!_decryptedContent) return
+
+    setDecryptedContent(bytesToUtf8(_decryptedContent))
+  }
+
+  if (encrypted && !decryptedContent) {
     return (
       <Alert
         style={{
@@ -130,11 +183,13 @@ const Body = ({ post: { content }, preview }: ViewPostProps) => {
         type="warning"
         message={<>
           <LockOutlined /> This post is encrypted
-          <Button className='ml-3' color='warning'>Pay to decrypt</Button>
+          <Button className='ml-3' onClick={onDecryptContent}>Pay to decrypt</Button>
         </>}
       />
     )
   }
+
+  const body = decryptedContent ? decryptedContent : content.body
   const shortStatus = !title && body && body.length <= 140
   return <div>{shortStatus ? <h2>{body}</h2> : (preview ? summarize(body) : body)}</div>
 }

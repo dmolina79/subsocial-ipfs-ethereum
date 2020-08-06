@@ -12,10 +12,9 @@ import { FormInstance } from 'antd/lib/form'
 import { withLoadSpaceFromMyStore } from '../spaces/ViewSpace'
 import { useSpaceStoreContext } from '../spaces/SpaceContext'
 import { createCommentStore, createCommentCounter } from '../comments/СommentContext'
-import { encryptContent, encryptSecretForApi } from '../../utils/crypto'
+import { encryptContent, encryptSecretForApi, web3 } from '../../utils'
 import axios from 'axios'
 import { StoreSecretParams } from '../../pages/api/secrets/store'
-import { web3 } from '../../utils/web3'
 import { drizzleReactHooks } from '@drizzle/react-plugin'
 
 const { TabPane } = Tabs;

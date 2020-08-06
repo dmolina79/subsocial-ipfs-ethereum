@@ -10,11 +10,17 @@ const secretsDir = process.env.SECRETS_DIR || path.join(process.env.PWD || '~', 
 const exists = promisify(fs.exists)
 const readFile = promisify(fs.readFile)
 
-type GetSecretParams = {
+export type GetSecretParams = {
   buyerEthAddress: string
   buyerPublicKey: string
   secretHash: string
   signedSecretHash: string
+}
+
+export type GetSecretRes = {
+  encryptedSecret: string
+  nonce: string
+  apiPublicKey: string
 }
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
