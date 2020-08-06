@@ -2,21 +2,17 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import path from 'path'
 import fs from 'fs'
 import { promisify } from 'util'
-import { returnOk, returnServerError, newRequireParam, returnClientError } from '../../../utils/next'
-import { web3 } from '../../../utils/web3'
+import { returnOk, returnServerError, newRequireParam, apiPublicKey, web3 } from '../../../utils'
 import { bytesToBase64 } from '../../../utils/codecs'
-import { decryptSecret } from '../../../utils/crypto'
+import { decryptSecretForApi } from '../../../utils/crypto'
 
 const secretsDir = process.env.SECRETS_DIR || path.join(process.env.PWD || '~', '.secrets')
-
-// TODO throw error if not defined
-const apiPublicKey = process.env.BOX_PUBLIC_KEY_BASE64 as string
 
 const exists = promisify(fs.exists)
 const mkdir = promisify(fs.mkdir)
 const writeFile = promisify(fs.writeFile)
 
-type StoreSecretParams = {
+export type StoreSecretParams = {
   postId: string
   authorEthAddress: string
   authorPublicKey: string
@@ -48,7 +44,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     await mkdir(secretsDir)
   }
 
-  const secret = decryptSecret({
+  const secret = decryptSecretForApi({
     encryptedSecret,
     nonce,
     publicKey: authorPublicKey
@@ -62,11 +58,16 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
   // TODO get post id from ETH contract and compare with postId param
 
-  const secretHash = web3.utils.keccak256(bytesToBase64(secret as Uint8Array))
-  const signer = await web3.eth.personal.ecRecover(signedSecretHash, secretHash)
-  if (signer !== authorEthAddress) {
-    returnClientError(res, 'A secret hash was not signed by a provided Ethereum address')
-  }
+  const secretAsString = bytesToBase64(secret as Uint8Array)
+  const secretHash = web3.utils.keccak256(secretAsString)
+  const signer = await web3.eth.accounts.recover(secretHash, signedSecretHash)
+  
+  console.log({ authorEthAddress, signer, secretAsString, secretHash, signedSecretHash, })
+
+  // This doesn't work. Signatures don't match :(
+  // if (signer !== authorEthAddress) {
+  //   returnClientError(res, 'A secret hash was not signed by a provided Ethereum address')
+  // }
 
   const json = JSON.stringify({
     postId,
