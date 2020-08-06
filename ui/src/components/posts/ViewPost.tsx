@@ -174,16 +174,16 @@ export const DynamicPost = () => {
   const { postStore } = usePostStoreContext()
   const [ post, setPost ] = useState<PostDto | undefined>()
   const [ isLoaded, setLoaded ] = useState(false)
-  const { query: { postId } } = useRouter()
+  const { asPath: path } = useRouter()
 
   useEffect(() => {
     const loadPosts = async () => {
-      const post = await postStore.get(postId).pop()
+      const post = await postStore.get(path).pop()
       post && setPost(post)
       setLoaded(true)
     }
     loadPosts().catch(err => console.error(err))
-  }, [ postId ])
+  }, [ path ])
 
   if (!isLoaded) return <Loading label='Loading post...' />
 

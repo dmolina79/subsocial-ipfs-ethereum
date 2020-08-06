@@ -1,14 +1,19 @@
 import React, { useContext, createContext, useState, useEffect } from 'react';
-
-const IpfsClient = require('ipfs-http-client')
-import OrbitDB from 'orbit-db'
 import { orbitConst } from './orbitConn';
 import CounterStore from 'orbit-db-counterstore';
 import { SpaceStore } from '../spaces/SpaceContext';
 import { CommentStore } from '../comments/СommentContext';
 import { PostStore } from '../posts/PostsContext';
+import OrbitDB from 'orbit-db'
 
-const ipfs = IpfsClient('/ip4/127.0.0.1/tcp/5001')
+const IPFS = require('ipfs')
+
+// Create IPFS instance
+const ipfsOptions = {
+  EXPERIMENTAL: {
+    pubsub: true
+  }
+}
 
 let orbitdb: OrbitDB | undefined = undefined
 
@@ -40,6 +45,7 @@ export const OrbitDbProvider = (props: React.PropsWithChildren<{}>) => {
       // Oleh's id:
       // 03c4097f9403cd349a867455fa80272171fbb20a604e8a572aff8d30ac073a0b7b
 
+      const ipfs = await IPFS.create(ipfsOptions);
       orbitdb = await OrbitDB.createInstance(ipfs)
 
       setOrbit({ orbitdb, owner: (orbitdb as any).identity.id, isReady: true })

@@ -80,11 +80,10 @@ export const importDataFromJson = async (orbitdb: OrbitDB, { spaces }: SpacesJso
       const { post, comments } = posts[postIndex]
 
       const postId = postIndex + 1
-      const commentCount = comments.length
+      let commentCount = comments.length
       const commentIdCouter = await openIdCounter(orbitdb, `spaces/${spaceId}/posts/${postId}/add_comment_counter`)
       commentIdCouter.inc(commentCount)
       const commentCounterLink = commentIdCouter.id
-      await commentIdCouter.close()
 
       const commentStore = await orbitdb.feed(`${postsPath}/${postId}/comments`)
 
@@ -112,11 +111,13 @@ export const importDataFromJson = async (orbitdb: OrbitDB, { spaces }: SpacesJso
               parentId: parentId
             }
             await commentStore.add(newReply)
+            await commentIdCouter.inc()
           }
         }
 
       }
 
+      await commentIdCouter.close()
       await commentStore.close()
 
       const newPost: PostDto = {

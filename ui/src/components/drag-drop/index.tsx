@@ -69,6 +69,7 @@ export const BucketDragDrop = ({ onUpload, accept }: BucketDragDropProps) => {
       await processAndStore(file, path, `preview.${format}`, preview)
     }
 
+    console.log(originalPath)
     onUpload(originalPath)
   }
 
