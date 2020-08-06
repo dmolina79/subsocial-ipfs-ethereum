@@ -1,4 +1,4 @@
-import React, {  } from 'react'
+import React, { useEffect } from 'react'
 import { List } from 'antd';
 import ViewComment from './ViewComment';
 import { CommentDto } from './types';
@@ -26,8 +26,14 @@ export const Comments = () => {
   const { onCommentAdded, state: { totalCommentCount } } = useCommentsContext()
   const comments = useGetRootComments()
 
+  useEffect(() => {
+    const hash = window.location.hash;
+    window.location.hash = '' 
+    window.location.hash = hash
+  }, [ totalCommentCount ])
+
   return <>
-    <h3>{pluralize(totalCommentCount, 'comment')}</h3>
+    <h3 id='comments'>{pluralize(totalCommentCount, 'comment')}</h3>
     <CommentEditor onCommentAdded={onCommentAdded} />
     <CommentList comments={comments} />
   </> 
