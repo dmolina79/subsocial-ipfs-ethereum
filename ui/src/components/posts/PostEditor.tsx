@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Form, Input, Empty, Button, notification, Tabs } from 'antd'
+import { Form, Input, Empty, Button, notification, Tabs, Checkbox } from 'antd'
 import { useRouter } from 'next/router'
-import { PostDto, PostContent, AllValues } from './types'
+import { PostDto, AllValues, CommentsLinks } from './types'
 import { SpaceDto } from '../spaces/types'
 import TextArea from 'antd/lib/input/TextArea'
 import { maxLenError, minLenError, TITLE_MIN_LEN, TITLE_MAX_LEN, DESC_MAX_LEN, getIdFromFullPath, pathToDbName } from '../utils'
@@ -12,15 +12,21 @@ import { FormInstance } from 'antd/lib/form'
 import { withLoadSpaceFromMyStore } from '../spaces/ViewSpace'
 import { useSpaceStoreContext } from '../spaces/SpaceContext'
 import { createCommentStore, createCommentCounter } from '../comments/СommentContext'
+import { encryptContent, encryptSecretForApi } from '../../utils/crypto'
+import axios from 'axios'
+import { StoreSecretParams } from '../../pages/api/secrets/store'
+import { web3 } from '../../utils/web3'
+import { drizzleReactHooks } from '@drizzle/react-plugin'
 
 const { TabPane } = Tabs;
+const { useDrizzleState } = drizzleReactHooks
 
 const layout = {
   labelCol: { span: 4 },
   wrapperCol: { span: 20 },
 };
 
-type Content = PostContent
+type Content = AllValues
 
 type FormValues = AllValues & {
   spaceId?: string
@@ -71,6 +77,9 @@ export function InnerForm (props: FormProps) {
   const [ submitting, setSubmitting ] = useState(false)
   const [ form ] = Form.useForm()
   const router = useRouter()
+  
+  const drizzleState = useDrizzleState(state => state)
+  const authorEthAddress = drizzleState.accounts[0]
 
   const { owner, orbitdb } = useOrbitDbContext()
   const { spacesPath } = useSpaceStoreContext()
@@ -78,16 +87,10 @@ export function InnerForm (props: FormProps) {
 
   if (!space) return <Empty description='Space not found' />
 
-  const isNew = !post
-
   const initialValues = getInitialValues({ space, post })
 
   const getFieldValues = (): FormValues => {
     return form.getFieldsValue() as FormValues
-  }
-
-  const fieldValuesToContent = (): Content => {
-    return getFieldValues() as Content
   }
 
   const goToView = (postId: string) => {
@@ -111,65 +114,119 @@ export function InnerForm (props: FormProps) {
     onUpload(url, 'video')
   }
 
-  const addPost = async (content: PostContent) => {
+  const createCommentStoreLinks = async (postId: string): Promise<CommentsLinks> => {
+    const postPath = pathToDbName(postsPath, postId)
+
+    const commentStore = await createCommentStore(orbitdb, postPath)
+    const commentStoreLink = commentStore.id
+    await commentStore.close()
+
+    const addCounter = await createCommentCounter(orbitdb, postPath, 'add')
+    const addCounterLink = addCounter.id
+    await addCounter.close()
+
+    const delCounter = await createCommentCounter(orbitdb, postPath, 'del');
+    const delCounterLink = delCounter.id
+    await delCounter.close()
+
+    return {
+      addCounter: addCounterLink,
+      delCounter: delCounterLink,
+      commentStore: commentStoreLink
+    }
+  }
+
+  /** Returns postId */
+  const addPost = async (): Promise<string> => {
 
     let postId = post ? getIdFromFullPath(post?.path) : '0'
+
+    const getMaybeEncryptedContent = async (postPath: string): Promise<Content> => {
+      const values = getFieldValues()
+      const content = { ...(values as Content) }
+      let { body, ...contentWoBody } = content
+
+      if (values.encrypted !== true || !body) {
+        return content
+      }
+
+      const contentEnc = encryptContent(body)
+      const { encryptedContent, secret, nonce } = contentEnc
+      const encryptionNonce = nonce
+      body = encryptedContent
+
+      const secretEnc = encryptSecretForApi(secret)
+      const secretHash = web3.utils.keccak256(secret)
+      const signedSecretHash = await web3.eth.sign(secretHash, authorEthAddress)
+      
+      const apiParams: StoreSecretParams = {
+        postId: postPath,
+        authorEthAddress,
+        authorPublicKey: secretEnc.publicKey,
+        nonce: secretEnc.nonce,
+        encryptedSecret: secretEnc.encryptedSecret,
+        signedSecretHash
+      }
+    
+      console.log('contentEnc', contentEnc)
+      console.log('secretEnc', secretEnc)
+      console.log('api params', apiParams)
+
+      await axios({
+        // method: 'post',
+        url: '/api/secrets/store',
+        params: apiParams
+      })
+
+      const contentForOrbit = { body, encryptionNonce, secretHash, ...contentWoBody }
+
+      console.log('content for Orbit', contentForOrbit)
+
+      return contentForOrbit
+    }
+
     let newPost: PostDto;
 
-    if (isNew && nextPostId) {
+    if (post) {
+      const content = await getMaybeEncryptedContent(post.path)
+      newPost = { ...post, content } as PostDto
+    } else {
       await nextPostId.inc()
       postId = nextPostId.value.toString()
+      const path = `${postsPath}/${postId}`
       const spaceId = router.query.spaceId as string
+      const spacePath = `${spacesPath}/${spaceId}`
 
-      const commentStore = await createCommentStore(orbitdb, pathToDbName(postsPath, postId))
-      const commentStoreLink = commentStore.id
-      await commentStore.close()
-      const addCounter = await createCommentCounter(orbitdb, pathToDbName(postsPath, postId), 'add')
-      const addCounterLink = addCounter.id
-      await addCounter.close()
-      const delCounter = await createCommentCounter(orbitdb, pathToDbName(postsPath, postId), 'del');
-      const delCounterLink = delCounter.id
-      await delCounter.close()
+      const content = await getMaybeEncryptedContent(path)
+      const links = await createCommentStoreLinks(postId)
 
       newPost = {
-        path: `${postsPath}/${postId}`,
-        spacePath: `${spacesPath}/${spaceId}`,
+        path,
+        spacePath,
         owner,
         created: {
           account: owner,
           time: new Date().getTime()
         },
-        content: content,
-        links: {
-          addCounter: addCounterLink,
-          delCounter: delCounterLink,
-          commentStore: commentStoreLink
-        }
+        content,
+        links
       }
 
-      console.log(newPost)
-
-      await commentStore.close()
-      await addCounter.close()
-      await delCounter.close()
-
-      console.log('Closing comments db')
-    } else {
-      newPost = { ...post, content } as PostDto
+      console.log('New post:', newPost)
     }
 
     await postStore.put(newPost)
 
-    setSubmitting(false)
-
-    goToView(postId)
+    return postId 
   }
 
   const onSubmit = async () => {
     const isValid = await isValidForm(form)
     if (isValid) {
       setSubmitting(true)
-      addPost(fieldValuesToContent())
+      const postId = await addPost()
+      setSubmitting(false)
+      goToView(postId) // TODO uncomment when post encryption fixed
     }
   }
 
@@ -186,6 +243,14 @@ export function InnerForm (props: FormProps) {
       >
         <Input placeholder='Optional: A title of your post' />
       </Form.Item>}
+
+      <Form.Item
+        name={fieldName('encrypted')}
+        valuePropName='checked'
+        label='Encryption'
+      >
+        <Checkbox>Encrypt content of this post</Checkbox>
+      </Form.Item>
 
       <Form.Item
         name={fieldName('body')}
@@ -226,10 +291,9 @@ export function InnerForm (props: FormProps) {
           Reset form
         </Button>
         <Button htmlType="submit" loading={submitting} disabled={submitting} onClick={onSubmit} type="primary">
-          New Post
+          Create post
         </Button>
       </div>
-      {/* // TODO impl Move post to another space. See component SelectSpacePreview */}
   </Form>
 }
 
