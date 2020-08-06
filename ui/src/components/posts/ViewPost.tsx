@@ -4,10 +4,10 @@ import React, { useState, useEffect, CSSProperties } from 'react';
 import { Comments } from '../comments/Comments';
 import { NextPage } from 'next';
 import Link from 'next/link'
-import { PostDto, AllValues } from './types';
+import { PostDto } from './types';
 import { PostsList } from './Posts';
 import moment from 'moment';
-import { toShortAddress, summarize, DfBgImg, IconText, DEFAULT_PATH, Loading } from '../utils';
+import { toShortAddress, summarize, IconText, DEFAULT_PATH, Loading } from '../utils';
 import Jdenticon from 'react-jdenticon';
 import { useRouter } from 'next/router';
 import { usePostStoreContext, PostStoreProviderWithLinks } from './PostsContext';
@@ -17,32 +17,33 @@ import { useOrbitDbContext, openIdCounter } from '../orbitdb';
 import CounterStore from 'orbit-db-counterstore';
 
 type ViewPostProps = {
-  post: PostDto
+  post: PostDto,
+  preview?: boolean
 }
 
 type PostLinkProps = {
   path: string,
   children: React.ReactNode,
+  hash?: string,
   className?: string,
   style?: CSSProperties
 }
-const PostLink = ({ path, children, className, style }: PostLinkProps) => <Link
-    href={path}
+const PostLink = ({ path, children, className, style, hash }: PostLinkProps) => <Link
+    href={`${DEFAULT_PATH}/[spaceId]/posts/[postId]`}
+    as={`${path}${hash ? '#'+hash : ''}`}
   >
-    <a className={className} style={style}>
+    <a className={`DfBlackLink ${className}`} style={style}>
       {children}
     </a>
   </Link>
 
 type InnerViewPostProps = ViewPostProps & {
-  preview?: React.ReactNode,
   children?: React.ReactNode
 }
 
 const useTotalCommentCount = (addCounterLink: string) => {
   const [ count, setCount ] = useState(0)
   const { orbitdb } = useOrbitDbContext()
-
 
   useEffect(() => {
     let addCommentCount: CounterStore;
@@ -81,14 +82,15 @@ export const InnerViewPost = ({ post: { created, owner, path, links }, preview, 
   return <List.Item
     key={created.time}
     actions={[
-      <IconText icon={MessageOutlined} text={totalCommentCount} key="list-vertical-message" />,
+      <PostLink path={path} hash='comments'>
+        <IconText icon={MessageOutlined} text={totalCommentCount} key="list-vertical-message" />
+      </PostLink>,
       <Link href={`${DEFAULT_PATH}/[spaceId]/posts/[postId]/edit`} as={`${path}/edit`}>
         <a style={{ color: '#8c8c8c' }}>
           <IconText icon={EditOutlined} text='Edit' key='list-vertical-edit' />
         </a>
       </Link>
     ]}
-    extra={preview}
     className='PostItem'
   >
     <List.Item.Meta
@@ -104,16 +106,17 @@ export const InnerViewPost = ({ post: { created, owner, path, links }, preview, 
   </List.Item>
 }
 
-const Title = ({ title }: Pick<AllValues, 'title'>) =>
-  title ? <h2 className='mb-2'>{title}</h2> : null
+const Title = ({ post: { content: { title}, path } }: ViewPostProps) =>
+  title ? <h2 className='mb-2'><PostLink path={path}>{title}</PostLink></h2> : null
 
-const Body = (props: Pick<AllValues, 'title' | 'body'>) => {
-  const { title, body } = props
+const Body = ({ post: { content }, preview }: ViewPostProps) => {
+  const { title, body } = content
   const shortStatus = !title && body && body.length <= 140
-  return <div>{shortStatus ? <h2>{body}</h2> : body}</div>
+  return <div>{shortStatus ? <h2>{body}</h2> : (preview ? summarize(body) : body)}</div>
 }
 
-export const ViewPostPage = ({ post }: ViewPostProps) => {
+export const ViewPostPage = (props: ViewPostProps) => {
+  const { post } = props
   const { content } = post
   const { title, image, video } = content
 
@@ -125,31 +128,15 @@ export const ViewPostPage = ({ post }: ViewPostProps) => {
     </div>
   )
 
-  const Image = () => !image ? null : <img src={image} className='PostImage' />
+  const Image = () => (!image || video) ? null : <img src={image} className='PostImage' />
   
-  return <InnerViewPost post={post}>
+  return <InnerViewPost {...props}>
     <div className='card'>
-      <Title {...content} />
+      <Title {...props} />
       <Video />
       <Image />
-      <Body {...content} />
+      <Body {...props} />
     </div>
-  </InnerViewPost>
-}
-
-export const ViewPostPreview = ({ post }: ViewPostProps) => {
-  const { content, path } = post
-  const { body, image } = content
-
-  const previewUrl = image?.replace('original', 'preview')
-
-  const preview = previewUrl ? <DfBgImg src={previewUrl} size={272} height={220} /> : null
-
-  return <InnerViewPost post={post} preview={preview}>
-    <PostLink style={{ color: '#222' }} path={path}>
-      <Title {...content} />
-      <Body {...content} body={summarize(body)} />
-    </PostLink>
   </InnerViewPost>
 }
 
@@ -158,9 +145,7 @@ export const ViewPost = ({ post }: ViewPostProps) => {
   
   const isPreview = !postId
 
-  return isPreview
-    ? <ViewPostPreview post={post} />
-    : <ViewPostPage post={post} />
+  return <ViewPostPage post={post} preview={isPreview}/>
 }
 
 const PostPage: NextPage<ViewPostProps> = ({ post }: ViewPostProps) => {
@@ -174,16 +159,16 @@ export const DynamicPost = () => {
   const { postStore } = usePostStoreContext()
   const [ post, setPost ] = useState<PostDto | undefined>()
   const [ isLoaded, setLoaded ] = useState(false)
-  const { asPath: path } = useRouter()
 
   useEffect(() => {
     const loadPosts = async () => {
+      const path = window.location.pathname
       const post = await postStore.get(path).pop()
       post && setPost(post)
       setLoaded(true)
     }
     loadPosts().catch(err => console.error(err))
-  }, [ path ])
+  }, [])
 
   if (!isLoaded) return <Loading label='Loading post...' />
 
