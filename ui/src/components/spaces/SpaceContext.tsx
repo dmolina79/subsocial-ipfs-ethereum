@@ -7,8 +7,6 @@ import { SpaceDto } from './types';
 import { Loading } from '../utils';
 import { useRouter } from 'next/router';
 
-export const MY_SPACES_STORE = 'mySpacesStoreAddress' 
-
 export type SpaceStore = DocStore<SpaceDto>
 
 type SpaceStoreContextType = {
@@ -26,7 +24,7 @@ export const SpaceStoreContext = createContext<SpaceStoreContextType>({
 export const useSpaceStoreContext = () =>
   useContext(SpaceStoreContext)
 
-export const SpaceStoreProvider = ({ spaceStoreLink, children }: React.PropsWithChildren<{ spaceStoreLink: string | null }>) => {
+export const SpaceStoreProvider = ({ spaceStoreLink, children }: React.PropsWithChildren<{ spaceStoreLink: string }>) => {
   const [ state, setState ] = useState<SpaceStoreContextType>()
   const { orbitdb } = useOrbitDbContext()
 
@@ -42,14 +40,13 @@ export const SpaceStoreProvider = ({ spaceStoreLink, children }: React.PropsWith
 
       console.log('After init space counter')
 
-      spaceStore = await openStore<SpaceStore>(orbitdb, spaceStoreLink || 'spaces')
+      spaceStore = await openStore<SpaceStore>(orbitdb, spaceStoreLink)
 
       await spaceStore.load()
 
       console.log('spaceStore', spaceStore)
 
       const spacesPath = spaceStore.id
-      !spaceStoreLink && localStorage.setItem(MY_SPACES_STORE, spacesPath)
   
       setState({ spaceStore, nextSpaceId, spacesPath: spacesPath });
     }
@@ -75,9 +72,8 @@ const SpaceStoreWrapper = ({ children }: React.PropsWithChildren<{}>): JSX.Eleme
 
   if (pathname.includes('feed')) return <>{children}</>;
 
-  const spaceStoreLink = localStorage.getItem(MY_SPACES_STORE)
 
-  return <SpaceStoreProvider spaceStoreLink={spaceStoreLink}>{children}</SpaceStoreProvider>
+  return <SpaceStoreProvider spaceStoreLink={'spaces'}>{children}</SpaceStoreProvider>
 }
 
 export default SpaceStoreWrapper

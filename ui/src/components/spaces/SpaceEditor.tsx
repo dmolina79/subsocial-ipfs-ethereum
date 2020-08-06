@@ -9,6 +9,7 @@ import { useSpaceStoreContext } from './SpaceContext'
 import { BucketDragDrop } from '../drag-drop'
 import { FormInstance } from 'antd/lib/form'
 import { PostStore } from '../posts/PostsContext'
+import { useMyDomain } from '../auth/AuthContext'
 
 const layout = {
   labelCol: { span: 4 },
@@ -63,7 +64,8 @@ export function InnerForm (props: FormProps) {
   const [ form ] = Form.useForm()
   const router = useRouter()
 
-  const { owner, orbitdb } = useOrbitDbContext()
+  const { orbitdb } = useOrbitDbContext()
+  const owner = useMyDomain()
   const { spaceStore, nextSpaceId, spacesPath } = useSpaceStoreContext()
 
   const isNew = !space
@@ -201,7 +203,7 @@ function LoadSpaceThenEdit (props: FormProps) {
   const [ isLoaded, setIsLoaded ] = useState(false)
   const [ space, setSpace ] = useState<SpaceDto>()
 
-  const { owner: myAddress } = useOrbitDbContext()
+  const myAddress = useMyDomain()
   const { spaceStore } = useSpaceStoreContext()
 
   useEffect(() => {

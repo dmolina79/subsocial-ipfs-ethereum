@@ -3,14 +3,16 @@ import { Button, Upload, message } from 'antd'
 import { useOrbitDbContext } from '../orbitdb'
 import { importDataFromJson } from './filler'
 import { useRouter } from 'next/router'
-import { UploadOutlined } from '@ant-design/icons';
+// import { UploadOutlined } from '@ant-design/icons';
 import { parseJsonFromFile } from './utils'
 import { Loading } from '../utils'
+import { useMyDomain } from '../auth/AuthContext'
 
 const EXPLORE_PATH = '/'
 
 export const FillerInput = () => {
   const { orbitdb } = useOrbitDbContext()
+  const owner = useMyDomain()
   const [ submitting, setSubmitting ] = useState(false)
   const router = useRouter()
 
@@ -18,7 +20,7 @@ export const FillerInput = () => {
     try {
       setSubmitting(true)
       const data = await parseJsonFromFile(file)
-      await importDataFromJson(orbitdb, data)
+      await importDataFromJson(orbitdb, data, owner)
       setSubmitting(false)
       
       console.log(router.pathname)
@@ -50,8 +52,8 @@ export const FillerInput = () => {
       }
     }
     >
-      <Button>
-        <UploadOutlined /> Import
+      <Button type='text'>
+        Import
       </Button>
     </Upload>
   </>

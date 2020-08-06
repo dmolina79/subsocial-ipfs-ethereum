@@ -7,6 +7,7 @@ import { BucketProvider } from '../components/buckets/BucketsContext'
 import PageLayout from '../layout/PageLayout'
 import SpaceStoreProvider from '../components/spaces/SpaceContext'
 import FollowSpaceStoreProvider from '../components/spaces/FollowSpaceContext'
+import AuthProvider from '../components/auth/AuthContext'
 // import { EthereumProvider } from '../components/eth/EthereumProvider'
 
 import 'antd/dist/antd.css'
@@ -22,17 +23,19 @@ function MyApp (props) {
         {/* <script src="/env.js" /> */}
       </Head>
       <OrbitDbProvider>
-        <BucketProvider>
-          <PageLayout>
-            <FollowSpaceStoreProvider >
-              <SpaceStoreProvider>
-                  {/* <EthereumProvider> */}
-                      <Component {...pageProps} />
-                   {/* </EthereumProvider> */}
-              </SpaceStoreProvider>
-            </FollowSpaceStoreProvider>
-          </PageLayout>
-        </BucketProvider>
+        <AuthProvider>
+          <BucketProvider>
+            <PageLayout>
+              <FollowSpaceStoreProvider >
+                <SpaceStoreProvider>
+                    {/* <EthereumProvider> */}
+                        <Component {...pageProps} />
+                    {/* </EthereumProvider> */}
+                </SpaceStoreProvider>
+              </FollowSpaceStoreProvider>
+            </PageLayout>
+          </BucketProvider>
+        </AuthProvider>
       </OrbitDbProvider>
     </>
   )

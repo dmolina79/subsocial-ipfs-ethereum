@@ -12,6 +12,7 @@ import { FormInstance } from 'antd/lib/form'
 import { withLoadSpaceFromMyStore } from '../spaces/ViewSpace'
 import { useSpaceStoreContext } from '../spaces/SpaceContext'
 import { createCommentStore, createCommentCounter } from '../comments/СommentContext'
+import { useMyDomain } from '../auth/AuthContext'
 import { encryptContent, encryptSecretForApi, web3 } from '../../utils'
 import axios from 'axios'
 import { StoreSecretParams } from '../../pages/api/secrets/store'
@@ -76,11 +77,13 @@ export function InnerForm (props: FormProps) {
   const [ submitting, setSubmitting ] = useState(false)
   const [ form ] = Form.useForm()
   const router = useRouter()
-  
+  const owner = useMyDomain()
+  const { orbitdb } = useOrbitDbContext()
+
   const drizzleState = useDrizzleState(state => state)
   const authorEthAddress = drizzleState.accounts[0]
 
-  const { owner, orbitdb } = useOrbitDbContext()
+  const { orbitdb } = useOrbitDbContext()
   const { spacesPath } = useSpaceStoreContext()
   const { postStore, nextPostId, postsPath } = usePostStoreContext()
 
@@ -301,7 +304,7 @@ function LoadPostThenEdit (props: FormProps) {
   const [ isLoaded, setIsLoaded ] = useState(false)
   const [ post, setPost ] = useState<PostDto>()
 
-  const { owner: myAddress } = useOrbitDbContext()
+  const myAddress = useMyDomain()
   const { postStore } = usePostStoreContext()
 
   useEffect(() => {

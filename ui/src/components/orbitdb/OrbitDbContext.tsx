@@ -1,9 +1,9 @@
 import React, { useContext, createContext, useState, useEffect } from 'react';
 import CounterStore from 'orbit-db-counterstore';
 import { SpaceStore } from '../spaces/SpaceContext';
-import { CommentStore } from '../comments/СommentContext';
 import { PostStore } from '../posts/PostsContext';
 import OrbitDB from 'orbit-db'
+import { ProfileStore } from '../auth/AuthContext';
 
 const IPFS = require('ipfs')
 
@@ -38,7 +38,7 @@ export const OrbitDbProvider = (props: React.PropsWithChildren<{}>) => {
       // 03c4097f9403cd349a867455fa80272171fbb20a604e8a572aff8d30ac073a0b7b
 
       const ipfs = await IPFS.create({
-        repo: '/orbitdb/hackfs/test1',
+        repo: '/orbitdb/hackfs/dapp2',
         start: true,
         // preload: {
         //   enabled: false
@@ -82,12 +82,12 @@ export const openIdCounter = async (orbitdb: OrbitDB, path: string) => await orb
   }
 } as any) as CounterStore
 
-export const openStore = async <T extends PostStore | SpaceStore | CommentStore>(orbitdb: OrbitDB, path: string) => await orbitdb.open(path, {
+export const openStore = async <T extends PostStore | SpaceStore | ProfileStore>(orbitdb: OrbitDB, path: string, indexBy: string = 'path') => await orbitdb.open(path, {
   create: true,
   type: 'docstore',
   replicate: true,
   accessController: {
     write: '*',
   },
-  indexBy: 'path'
+  indexBy
 } as any) as T

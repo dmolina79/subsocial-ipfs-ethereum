@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { PostDto } from './types';
 import { PostsList } from './Posts';
 import moment from 'moment';
-import { toShortAddress, summarize, IconText, DEFAULT_PATH, Loading, parseFullPath } from '../utils';
+import { summarize, IconText, DEFAULT_PATH, Loading, parseFullPath } from '../utils';
 import Jdenticon from 'react-jdenticon';
 import { useRouter } from 'next/router';
 import { usePostStoreContext, PostStoreProviderWithLinks } from './PostsContext';
@@ -111,7 +111,7 @@ export const InnerViewPost = ({
   >
     <List.Item.Meta
       avatar={<Avatar icon={<Jdenticon value={owner}/>} />}
-      title={<>{`${toShortAddress(owner)} in `}<SpaceLink path={spacePath}>{spaceTitle}</SpaceLink></>}
+      title={<>{`${owner} in `}<SpaceLink path={spacePath}>{spaceTitle}</SpaceLink></>}
       description={<span>
         <Tooltip title={time.format('YYYY-MM-DD HH:mm:ss')}>
           <PostLink path={path} style={{ color: '#8c8c8c', fontSize: '.85rem' }}>{time.fromNow()}</PostLink>
