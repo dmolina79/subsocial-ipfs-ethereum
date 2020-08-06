@@ -4,12 +4,9 @@ import fs from 'fs'
 import { promisify } from 'util'
 import { returnOk, returnServerError, newRequireParam, returnClientError } from '../../../utils/next'
 import { web3 } from '../../../utils/web3'
-import { decryptSecret, encryptSecret } from '../../../utils/crypto'
+import { decryptSecretForApi, encryptSecretForBuyer } from '../../../utils/crypto'
 
 const secretsDir = process.env.SECRETS_DIR || path.join(process.env.PWD || '~', '.secrets')
-
-// TODO throw error if not defined
-const apiPublicKey = process.env.BOX_PUBLIC_KEY_BASE64 as string
 
 const exists = promisify(fs.exists)
 const readFile = promisify(fs.readFile)
@@ -52,12 +49,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
   // TODO check that ETH buyer paid for this post in smart contract
 
-  const signer = await web3.eth.personal.ecRecover(signedSecretHash, secretHash)
+  const signer = await web3.eth.accounts.recover(secretHash, signedSecretHash)
   if (signer !== buyerEthAddress) {
     returnClientError(res, 'A secret hash was not signed by a provided Ethereum address')
   }
 
-  const secret = decryptSecret({
+  const secret = decryptSecretForApi({
     encryptedSecret,
     nonce,
     publicKey: authorPublicKey
@@ -68,7 +65,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     returnServerError(res, 'Failed to decrypt a secret')
   }
   
-  const secretEncryptedForBuyer = encryptSecret({
+  const secretEncryptedForBuyer = encryptSecretForBuyer({
     secret: secret as Uint8Array,
     publicKey: buyerPublicKey
   })
