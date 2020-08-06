@@ -2,7 +2,7 @@ import React, { useContext, createContext, useState, useEffect } from 'react';
 
 import CounterStore from 'orbit-db-counterstore'
 import DocStore from 'orbit-db-docstore'
-import { useOrbitDbContext } from '../orbitdb';
+import { useOrbitDbContext, openStore, openIdCounter } from '../orbitdb';
 import { SpaceDto } from './types';
 import { Loading } from '../utils';
 import { useRouter } from 'next/router';
@@ -36,13 +36,13 @@ export const SpaceStoreProvider = ({ spaceStoreLink, children }: React.PropsWith
     async function init() {
 
       console.log('Before init space counter')
-      nextSpaceId = await orbitdb.counter('next_space_id')
+      nextSpaceId = await openIdCounter(orbitdb, 'next_space_id')
 
       await nextSpaceId.load()
 
       console.log('After init space counter')
 
-      spaceStore = await orbitdb.docs(spaceStoreLink || 'spaces', { indexBy: 'path' } as any)
+      spaceStore = await openStore<SpaceStore>(orbitdb, spaceStoreLink || 'spaces')
 
       await spaceStore.load()
 
@@ -73,7 +73,7 @@ export const SpaceStoreProvider = ({ spaceStoreLink, children }: React.PropsWith
 const SpaceStoreWrapper = ({ children }: React.PropsWithChildren<{}>): JSX.Element | null => {
   const { pathname } = useRouter()
 
-  if (!pathname.includes('spaces')) return <>{children}</>;
+  if (pathname.includes('feed')) return <>{children}</>;
 
   const spaceStoreLink = localStorage.getItem(MY_SPACES_STORE)
 

@@ -1,5 +1,4 @@
 import React, { useContext, createContext, useState, useEffect } from 'react';
-import { orbitConst } from './orbitConn';
 import CounterStore from 'orbit-db-counterstore';
 import { SpaceStore } from '../spaces/SpaceContext';
 import { CommentStore } from '../comments/СommentContext';
@@ -7,13 +6,6 @@ import { PostStore } from '../posts/PostsContext';
 import OrbitDB from 'orbit-db'
 
 const IPFS = require('ipfs')
-
-// Create IPFS instance
-const ipfsOptions = {
-  EXPERIMENTAL: {
-    pubsub: true
-  }
-}
 
 let orbitdb: OrbitDB | undefined = undefined
 
@@ -45,13 +37,30 @@ export const OrbitDbProvider = (props: React.PropsWithChildren<{}>) => {
       // Oleh's id:
       // 03c4097f9403cd349a867455fa80272171fbb20a604e8a572aff8d30ac073a0b7b
 
-      const ipfs = await IPFS.create(ipfsOptions);
+      const ipfs = await IPFS.create({
+        repo: '/orbitdb/hackfs/test1',
+        start: true,
+        // preload: {
+        //   enabled: false
+        // },
+        EXPERIMENTAL: {
+          ipnsPubsub: true,
+        },
+        config: {
+          Addresses: {
+            Swarm: [
+              '/ip4/127.0.0.1/tcp/9090/ws/p2p-webrtc-star/',
+            ]
+          },
+        }
+      })
+    
       orbitdb = await OrbitDB.createInstance(ipfs)
 
       setOrbit({ orbitdb, owner: (orbitdb as any).identity.id, isReady: true })
       if (window) {
-        orbitConst.orbitDb = orbitdb;
-        (window as any).orbitConst = orbitConst;
+        (window as any).orbitdb = orbitdb;
+        (window as any).ipfs = ipfs
       }
     }
     initOrbitDB()
@@ -64,41 +73,21 @@ export const OrbitDbProvider = (props: React.PropsWithChildren<{}>) => {
 
 export default OrbitDbProvider
 
-export const openIdCounter = async (orbitdb: OrbitDB, path: string) => await orbitdb.counter(path) as CounterStore
+export const openIdCounter = async (orbitdb: OrbitDB, path: string) => await orbitdb.open(path, {
+  create: true,
+  type: 'counter',
+  replicate: true,
+  accessController: {
+    write: '*',
+  }
+} as any) as CounterStore
 
-export const openStore = async <T extends PostStore | SpaceStore | CommentStore>(orbitdb: OrbitDB, path: string) => await orbitdb.docs(path, { indexBy: 'path' } as any) as T
-
-// export const getPostStore = async () => {
-//   if (postStore) return postStore;
-
-//   if (!orbitdb) {
-//     orbitdb = await OrbitDB.createInstance(ipfs)
-//   }
-
-//   postStore = await orbitdb.docs('posts', { indexBy: 'id' } as any)
-
-//   await postStore.load()
-
-//   return postStore;
-// }
-
-     // const peerId = ''
-      // await db.access.grant('write', id2)
-
-      // const nextPostId = await orbitdb.create('post_total_counter', 'counter', {
-      //   accessController: {
-      //     write: [
-      //       '*' // Anyone can write
-      //       // Give access to ourselves
-      //       // orbitdb.identity.id,
-      //       // Give access to the second peer
-      //       // peerId
-      //     ]
-      //   },
-      //   // overwrite: true,
-      //   // replicate: false,
-      //   // meta: { hello: 'meta hello' }
-      // }) as CounterStore
-      // database is now ready to be queried
-
-      
+export const openStore = async <T extends PostStore | SpaceStore | CommentStore>(orbitdb: OrbitDB, path: string) => await orbitdb.open(path, {
+  create: true,
+  type: 'docstore',
+  replicate: true,
+  accessController: {
+    write: '*',
+  },
+  indexBy: 'path'
+} as any) as T

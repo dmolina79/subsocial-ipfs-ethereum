@@ -153,3 +153,13 @@ export const createSpaceLink = ({ hash }: CreateLink) => `/orbitdb/${hash}/space
 export const createPostLink = ({ hash, spaceId }: CreateLink) => `/orbitdb/${hash}/spaces/${spaceId}/posts`
 
 export const pathToDbName = (path: string, id: string) => `${path.split('/').slice(3).join('/')}/${id}`
+
+export const parseFullPath = (path: string) => {
+  const pathArr = path.split('/')
+  const id = pathArr.pop()
+  const newPath = pathArr.join('/')
+  return {
+    path: newPath,
+    id
+  }
+}

@@ -1,9 +1,8 @@
-import { List, Button } from 'antd';
+import { List } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { ViewSpace } from './ViewSpace';
 import { SpaceDto } from './types';
-import { getPathAndId, getIdFromFullPath } from '../utils';
-import Link from 'next/link';
+import { getPathAndId, getIdFromFullPath, Loading } from '../utils';
 import { useSpaceStoreContext, SpaceStore } from './SpaceContext';
 import { useFollowSpaceStoreContext } from './FollowSpaceContext';
 import { openStore, useOrbitDbContext } from '../orbitdb';
@@ -15,18 +14,16 @@ type SpaceListProps = {
 
 export const SpaceList = ({ spaces, header }: SpaceListProps) => {
 
-  return spaces
-    ? <List
+  return <List
       size="large"
       itemLayout='vertical'
       header={header}
       dataSource={spaces}
       renderItem={space => <ViewSpace space={space} isPreview />}
     />
-    : <em>Loading spaces...</em>;
 }
 
-export const MySpaces = () => {
+export const Spaces = () => {
   const { spaceStore } = useSpaceStoreContext()
   const [ spaces, setSpace ] = useState<SpaceDto[] | undefined>()
 
@@ -42,15 +39,10 @@ export const MySpaces = () => {
     ? <SpaceList
         spaces={spaces}
         header={<h2 className='d-flex justify-content-between'>
-          My spaces ({spaces.length})
-          <Button type='primary' ghost>
-            <Link href={`/myspaces/new`} as={`/myspaces/new`}>
-              <a>New space</a>
-            </Link>
-          </Button>
+          Spaces ({spaces.length})
         </h2>}
       />
-    : <em>Loading spaces...</em>;
+    : <Loading label='Loading spaces...' />
 }
 
 export const FollowSpaces = () => {
@@ -93,6 +85,6 @@ export const FollowSpaces = () => {
         spaces={spaces}
         header={<h2>My subscriptions</h2>}
       />
-    : <em>Loading spaces...</em>;
+    : <Loading label='Loading subscriptions...' />
 }
 

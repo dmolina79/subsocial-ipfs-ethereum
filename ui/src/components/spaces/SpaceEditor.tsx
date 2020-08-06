@@ -180,7 +180,7 @@ export function InnerForm (props: FormProps) {
           { required: true, message: 'Avatar is required.' }
         ]}
       >
-        <BucketDragDrop onUpload={onImageUpload} accept='image' />
+        <BucketDragDrop onUpload={onImageUpload} accept='image' onlyPreview />
       </Form.Item>
 
       <div className='RigthButtonGroup'>

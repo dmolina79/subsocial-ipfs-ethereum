@@ -7,7 +7,6 @@ import { useOrbitDbContext, openStore, openIdCounter } from '../orbitdb';
 import { useRouter } from 'next/router';
 import { Loading, createPostLink } from '../utils';
 import { PostLinks } from '../spaces/types';
-import OrbitDB from 'orbit-db';
 
 export type PostStore = DocStore<PostDto>
 
@@ -26,36 +25,6 @@ export const PostStoreContext = createContext<PostStoreContextType>({
   postStore: {} as any,
   postsPath: ''
 });
-
-export const createPostIdCounter = async (
-  orbitdb: OrbitDB,
-  spacePath: string,
-) => await orbitdb.create(`${spacePath}/next_post_id`, 'counter', {
-  accessController: {
-    write: [
-      '*' // Anyone can write
-      // Give access to ourselves
-      // orbitdb.identity.id,
-      // Give access to the second peer
-      // peerId
-    ]
-  },
-}) as CounterStore
-
-export const createPostStore = async (
-  orbitdb: OrbitDB,
-  spacePath: string
-) => await orbitdb.create(`${spacePath}/posts`, 'docstore', {
-  accessController: {
-    write: [
-      '*' // Anyone can write
-      // Give access to ourselves
-      // orbitdb.identity.id,
-      // Give access to the second peer
-      // peerId
-    ]
-  }
-}) as PostStore
 
 export const usePostStoreContext = () =>
   useContext(PostStoreContext)
