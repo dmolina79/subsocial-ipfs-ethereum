@@ -1,9 +1,8 @@
 import React, { useContext, createContext, useState, useEffect } from 'react';
 import DocStore from 'orbit-db-docstore'
 import { useOrbitDbContext, openStore } from '../orbitdb';
-import { Loading } from '../utils';
 
-export const MY_PROFILE_STORE = 'myProfileStore' 
+export const MY_PROFILE_DOMAIN = 'myProfileDomain' 
 
 export type Profile = {
   domain: string,
@@ -35,43 +34,60 @@ export const AuthProvider = ({ children }: React.PropsWithChildren<{}>) => {
   const [ profileStore, setStore ] = useState<ProfileStore>()
   const { orbitdb, isReady } = useOrbitDbContext()
 
+  const openProfileStore = async (path: string) => {
+    const profileStore = await openStore<ProfileStore>(orbitdb, path, 'domain')
+
+    await profileStore.load()
+
+    setStore(profileStore)
+    return profileStore
+  }
+
   useEffect(() => {
-    if (!isReady) return
+    const profilePath = localStorage.getItem(MY_PROFILE_DOMAIN)
 
-    let profileStore: ProfileStore;
-    async function initAuth() {
-      const profileStore = await openStore<ProfileStore>(orbitdb, 'profile', 'domain')
+    if (!isReady || !profilePath || profileStore) return
 
-      await profileStore.load()
+    let store: ProfileStore;
 
-      setStore(profileStore)
-
-      const profile = profileStore.get('').pop()
+    const initProfile = async () => {
+      store = await openProfileStore(profilePath)
+      const profile = store.get('').pop()
 
       setProfile(profile)
     }
-    initAuth()
 
-    return () => { profileStore && profileStore.close() }
-  }, [ isReady ])
+    initProfile()
+      .catch(err => console.error(err))
+
+    return () => { store && store.close() }
+  }, [ isReady, profile ])
 
   if (!isReady) return <>{children}</>
 
-  if (!profileStore) return <Loading label='Initialization profile store' />
+  const signIn = async (profile: Profile) => {
+    let store: ProfileStore;
 
-  const signIn = (profile: Profile) => {
-    profileStore.put(profile)
+    if (profileStore) {
+      store = profileStore
+    } else {
+      const domain = profile.domain
+      store = await openProfileStore(domain)
+      localStorage.setItem(MY_PROFILE_DOMAIN, domain)
+    }
+
+    store.put(profile)
     setProfile(profile)
   }
 
   const signOut = () => {
-    profileStore.drop()
+    profileStore && profileStore.drop()
     setProfile(undefined)
   }
 
   return <AuthContext.Provider value={{
       profile,
-      profilePath: profileStore.id,
+      profilePath: profileStore?.id || '',
       signIn,
       signOut
     }}>

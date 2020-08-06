@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { PageHeader } from 'antd';
 import { useRouter } from 'next/router';
-import { statusTag, Loading } from '../components/utils';
+import { Loading } from '../components/utils';
 import { useBucketContext } from '../components/buckets/BucketsContext';
 import { useOrbitDbContext } from '../components/orbitdb';
 import Link from 'next/link';
@@ -9,12 +9,12 @@ import { FillerInput } from '../components/filler/Input';
 import { AuthView } from '../components/auth/AuthView';
 import { useAuthContext } from '../components/auth/AuthContext';
 
-type EntityStatusProps = {
-  title: string,
-  isReady: boolean
-}
+// type EntityStatusProps = {
+//   title: string,
+//   isReady: boolean
+// }
 
-const EntityStatus = ({ title, isReady }: EntityStatusProps) => statusTag(title, isReady)
+// const EntityStatus = ({ title, isReady }: EntityStatusProps) => statusTag(title, isReady)
 
 export const PageLayout = ({ children }: React.PropsWithChildren<{}>) => {
   const router = useRouter()
@@ -25,21 +25,17 @@ export const PageLayout = ({ children }: React.PropsWithChildren<{}>) => {
 
   const isAppReady = isBucket && isOrbitDb
 
-  const orbitDBStatus = <EntityStatus title='OrbitDB:' isReady={isOrbitDb} />
-  const bucketStatus = <EntityStatus title='Buckets:' isReady={isBucket} />
+  // const orbitDBStatus = <EntityStatus title='OrbitDB:' isReady={isOrbitDb} />
+  // const bucketStatus = <EntityStatus title='Buckets:' isReady={isBucket} />
 
   return <>
     <PageHeader
       title='Subsocial'
-      subTitle={<>
-        {orbitDBStatus}
-        {bucketStatus}
-      </>}
       extra={[
         profile && <>
-          <Link key='myFeed' href='/feed' as='/feed'><a className='ant-btn'>Feed</a></Link>,
-          <Link key='mySubs' href='/subscription' as='/subscription'><a className='ant-btn'>My subscriptions</a></Link>,
-          <Link key='newSpace' href={`/new-space`} as={`/new-space`}><a className='ant-btn'>New space</a></Link>,
+          <Link key='myFeed' href='/feed' as='/feed'><a className='ant-btn ant-btn-text'>Feed</a></Link>
+          <Link key='mySubs' href='/subscription' as='/subscription'><a className='ant-btn ant-btn-text'>My subs.</a></Link>
+          <Link key='newSpace' href={`/new-space`} as={`/new-space`}><a className='ant-btn ant-btn-text'>New space</a></Link>
           <FillerInput key='filler' />
         </>,
         isAppReady && <AuthView key='auth' />

@@ -3,7 +3,7 @@ import { useAuthContext, Profile } from './AuthContext';
 import Avatar from 'antd/lib/avatar/avatar';
 import Jdenticon from 'react-jdenticon';
 import { SignInButton } from './AuthModal';
-import { LogoutOutlined } from '@ant-design/icons';
+// import { LogoutOutlined } from '@ant-design/icons';
 import { toShortAddress } from '../utils';
 import { Button } from 'antd';
 
@@ -17,13 +17,12 @@ export const ProfilePreview = ({ profile }: ProfilePreview) => {
   return <span className='d-flex'>
       <Avatar
         key='Unstoppabledomains'
-        icon={<Jdenticon value={wallet}/>}
+        icon={<Jdenticon value={domain}/>}
       />
       <div className='d-block NormalLineHeight'>
         <b>{domain}</b>
         <div className='ExtraDetails'>
-          {`Wallet: `}
-          <a className='DfBlackLink muted' href={`https://etherscan.io/address/${wallet}`} target='_blank'>
+          <a className='DfBlackLink MutedText' href={`https://etherscan.io/address/${wallet}`} target='_blank'>
             {toShortAddress(wallet)}
           </a>
         </div>
@@ -36,7 +35,7 @@ export const AuthView = () => {
 
   return profile
     ? <>
-      <Button key='sign-out' onClick={signOut}><LogoutOutlined />Sign out</Button>
+      <Button key='sign-out' type='text' onClick={signOut}>Sign out</Button>
       <ProfilePreview key='profile-preview' profile={profile} />
     </>
     : <SignInButton key='sign-in' />

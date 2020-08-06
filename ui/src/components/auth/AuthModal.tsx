@@ -49,7 +49,7 @@ export const AuthModal = ({ open, close }: AuthModal) => {
       visible={!profile && open}
       onCancel={close}
       width={250}
-      title='SignIn with crypto domain'
+      title='Sign in with crypto domain'
       footer={
         <Form.Item>
           <Button htmlType="submit" onClick={onSignIn} type="primary">

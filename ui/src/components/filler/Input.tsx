@@ -3,7 +3,7 @@ import { Button, Upload, message } from 'antd'
 import { useOrbitDbContext } from '../orbitdb'
 import { importDataFromJson } from './filler'
 import { useRouter } from 'next/router'
-import { UploadOutlined } from '@ant-design/icons';
+// import { UploadOutlined } from '@ant-design/icons';
 import { parseJsonFromFile } from './utils'
 import { Loading } from '../utils'
 import { useMyDomain } from '../auth/AuthContext'
@@ -52,8 +52,8 @@ export const FillerInput = () => {
       }
     }
     >
-      <Button>
-        <UploadOutlined /> Import
+      <Button type='text'>
+        Import
       </Button>
     </Upload>
   </>
