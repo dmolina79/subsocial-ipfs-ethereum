@@ -5,31 +5,40 @@ import { PostDto } from './types';
 import { pluralize, DEFAULT_PATH } from '../utils';
 import Link from 'next/link';
 import { usePostStoreContext } from './PostsContext';
+import { SpaceDto } from '../spaces/types';
+import { useOrbitDbContext } from '../orbitdb';
+
+export type PostWithSpace = {
+  post: PostDto,
+  space: SpaceDto
+}
 
 type PostsListProps = {
-  posts: PostDto[],
+  data: PostWithSpace[],
   header?: React.ReactNode
 }
 
-export const PostsList = ({ posts, header }: PostsListProps) => {
+export const PostsList = ({ data, header }: PostsListProps) => {
 
-  return posts
+  return data
     ? <List
       size="large"
       itemLayout='vertical'
       header={header}
-      dataSource={posts}
-      renderItem={post => <ViewPost post={post} />}
+      dataSource={data}
+      renderItem={({ post, space }) => <ViewPost post={post} space={space} />}
     />
     : <em>Loading posts...</em>;
 }
 
 type DynamicPostsProps = {
-  spacePath: string
+  space: SpaceDto
 }
-const DynamicPosts = ({ spacePath }: DynamicPostsProps) => {
+const DynamicPosts = ({ space }: DynamicPostsProps) => {
   const { postStore } = usePostStoreContext()
   const [ posts, setPosts ] = useState<PostDto[] | undefined>()
+  const { owner } = useOrbitDbContext()
+  const isMySpace = space.owner === owner
 
   useEffect(() => {
     if (posts?.length) return
@@ -43,14 +52,14 @@ const DynamicPosts = ({ spacePath }: DynamicPostsProps) => {
 
   return posts
     ? <PostsList
-        posts={posts}
+        data={posts.map(post => ({ post, space }))}
         header={<h2 className='d-flex justify-content-between'>
           {pluralize(posts.length, 'post')}
-          <Button type='primary' ghost>
-            <Link href={`${DEFAULT_PATH}/[spaceId]/posts/new`} as={`${spacePath}/posts/new`}>
+          {isMySpace && <Button type='primary' ghost>
+            <Link href={`${DEFAULT_PATH}/[spaceId]/posts/new`} as={`${space.path}/posts/new`}>
               <a>New post</a>
             </Link>
-          </Button>
+          </Button>}
         </h2>}
       />
     : <em>Loading posts...</em>;

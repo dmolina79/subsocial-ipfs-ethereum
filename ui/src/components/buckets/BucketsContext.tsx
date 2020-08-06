@@ -133,18 +133,3 @@ export const BucketProvider = (props: React.PropsWithChildren<{}>) => {
 }
 
 export default BucketProvider
-
-
-// export const getPostStore = async () => {
-//   if (postStore) return postStore;
-
-//   if (!buckets) {
-//     buckets = await OrbitDB.createInstance(ipfs)
-//   }
-
-//   postStore = await buckets.docs('posts', { indexBy: 'id' } as any)
-
-//   await postStore.load()
-
-//   return postStore;
-// }

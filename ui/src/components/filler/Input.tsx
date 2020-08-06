@@ -7,6 +7,8 @@ import { UploadOutlined } from '@ant-design/icons';
 import { parseJsonFromFile } from './utils'
 import { Loading } from '../utils'
 
+const EXPLORE_PATH = '/'
+
 export const FillerInput = () => {
   const { orbitdb } = useOrbitDbContext()
   const [ submitting, setSubmitting ] = useState(false)
@@ -18,7 +20,13 @@ export const FillerInput = () => {
       const data = await parseJsonFromFile(file)
       await importDataFromJson(orbitdb, data)
       setSubmitting(false)
-      router.push('/myspaces', '/myspaces')
+      
+      console.log(router.pathname)
+
+      router.pathname === EXPLORE_PATH
+        ? router.reload()
+        : router.push(EXPLORE_PATH, EXPLORE_PATH)
+
     } catch (err) {
       console.error('Failed filled: ', err)
       setSubmitting(false)
