@@ -1,5 +1,5 @@
-import { List, Avatar, Tooltip, Empty } from 'antd';
-import { MessageOutlined, EditOutlined } from '@ant-design/icons';
+import { List, Avatar, Tooltip, Empty, Button, Alert } from 'antd';
+import { MessageOutlined, EditOutlined, LockOutlined } from '@ant-design/icons';
 import React, { useState, useEffect, CSSProperties } from 'react';
 import { Comments } from '../comments/Comments';
 import { NextPage } from 'next';
@@ -119,7 +119,22 @@ const Title = ({ post: { content: { title}, path } }: ViewPostProps) =>
   title ? <h2 className='mb-2'><PostLink path={path}>{title}</PostLink></h2> : null
 
 const Body = ({ post: { content }, preview }: ViewPostProps) => {
-  const { title, body } = content
+  const { title, body, encrypted } = content
+  if (encrypted) {
+    return (
+      <Alert
+        style={{
+          textAlign: 'center',
+          padding: '1rem'
+        }}
+        type="warning"
+        message={<>
+          <LockOutlined /> This post is encrypted
+          <Button className='ml-3' color='warning'>Pay to decrypt</Button>
+        </>}
+      />
+    )
+  }
   const shortStatus = !title && body && body.length <= 140
   return <div>{shortStatus ? <h2>{body}</h2> : (preview ? summarize(body) : body)}</div>
 }

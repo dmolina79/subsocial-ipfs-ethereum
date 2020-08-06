@@ -21,13 +21,9 @@ type EncryptSecretProps = {
   publicKey: string | Uint8Array
 }
 
-export function asUint8Array (value: string | Uint8Array): Uint8Array {
-  return typeof value === 'string' ? utf8ToBytes(value) : value
-}
-
 export const encryptSecretForBuyer = (props: EncryptSecretProps) => {
   const { secret, publicKey }  = props
-  const message = asUint8Array(secret)
+  const message = typeof secret === 'string' ? base64ToBytes(secret) : secret
   const nonce = randomNonce()
   const pubKey = typeof publicKey === 'string' ? base64ToBytes(publicKey) : publicKey
 
@@ -45,7 +41,7 @@ export const encryptSecretForBuyer = (props: EncryptSecretProps) => {
 }
 
 export const encryptSecretForApi = (secret: string) => {
-  const message = asUint8Array(secret)
+  const message = typeof secret === 'string' ? base64ToBytes(secret) : secret
   const nonce = randomNonce()
   const keys = nacl.box.keyPair()
 
@@ -80,7 +76,7 @@ export const decryptSecretForApi = (props: DecryptSecretProps) => {
 }
 
 export const encryptContent = (content: string | Uint8Array) => {
-  const message = asUint8Array(content)
+  const message = typeof content === 'string' ? utf8ToBytes(content) : content
   const nonce = randomNonce()
   const secret = randomSecret()
 

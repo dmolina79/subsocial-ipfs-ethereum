@@ -60,9 +60,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
   const secretAsString = bytesToBase64(secret as Uint8Array)
   const secretHash = web3.utils.keccak256(secretAsString)
-  const signer = await web3.eth.accounts.recover(secretHash, signedSecretHash)
+
+  // TODO eth verification doesn't work
+  // const signer = await web3.eth.accounts.recover(secretHash, signedSecretHash)
   
-  console.log({ authorEthAddress, signer, secretAsString, secretHash, signedSecretHash, })
+  console.log({ authorEthAddress, /* signer, */ secretAsString, secretHash, signedSecretHash, })
 
   // This doesn't work. Signatures don't match :(
   // if (signer !== authorEthAddress) {

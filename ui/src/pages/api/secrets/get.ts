@@ -2,9 +2,8 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import path from 'path'
 import fs from 'fs'
 import { promisify } from 'util'
-import { returnOk, returnServerError, newRequireParam, returnClientError } from '../../../utils/next'
-import { web3 } from '../../../utils/web3'
-import { decryptSecretForApi, encryptSecretForBuyer } from '../../../utils/crypto'
+import { returnOk, returnServerError, newRequireParam } from '../../../utils'
+import { apiPublicKey, decryptSecretForApi, encryptSecretForBuyer } from '../../../utils/crypto'
 
 const secretsDir = process.env.SECRETS_DIR || path.join(process.env.PWD || '~', '.secrets')
 
@@ -49,10 +48,11 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
   // TODO check that ETH buyer paid for this post in smart contract
 
-  const signer = await web3.eth.accounts.recover(secretHash, signedSecretHash)
-  if (signer !== buyerEthAddress) {
-    returnClientError(res, 'A secret hash was not signed by a provided Ethereum address')
-  }
+  // TODO eth verification doesn't work
+  // const signer = await web3.eth.accounts.recover(secretHash, signedSecretHash)
+  // if (signer !== buyerEthAddress) {
+  //   returnClientError(res, 'A secret hash was not signed by a provided Ethereum address')
+  // }
 
   const secret = decryptSecretForApi({
     encryptedSecret,
