@@ -1,3 +1,3 @@
 #!/bin/bash
 
-star-signal --port=13579 --host=127.0.0.1
+star-signal --host=127.0.0.1
