@@ -1,0 +1,161 @@
+{
+  "spaces": [
+    {
+      "space": {
+        "title": "Ethereum",
+        "desc": "Ethereum is a technology that lets you send cryptocurrency to anyone for a small fee.\nIt also powers applications that everyone can use and no one can take down. It's the world's programmable blockchain. \nEthereum builds on Bitcoin's innovation, with some big differences. Both let you use digital money without payment providers or banks. \nBut Ethereum is programmable, so you can also use it for lots of different digital assets – even Bitcoin! \nThis also means Ethereum is for more than payments. It's a marketplace of financial services, games and apps that can't steal your data or censor you. So step into the bazaar and give it a try...",
+        "avatar": "https://upload.wikimedia.org/wikipedia/commons/b/b7/ETHEREUM-YOUTUBE-PROFILE-PIC.png"
+      },
+      "posts": [
+        {
+          "post": {
+            "title": "What Is Ethereum",
+            "body": "Launched in 2015, Ethereum is an open-source, blockchain-based, decentralized software platform used for its own cryptocurrency, ether. It enables SmartContracts and Distributed Applications (ĐApps) to be built and run without any downtime, fraud, control, or interference from a third party.\nEthereum is not just a platform but also a programming language (Turing complete) running on a blockchain, helping developers to build and publish distributed applications.\nThe applications run on Ethereum are run on a platform-specific cryptographic token, ether. During 2014, Ethereum had launched a pre-sale for ether which had received an overwhelming response. Ether is like a vehicle for moving around on the Ethereum platform and is mostly sought by developers looking to develop and run applications inside Ethereum. Ether is used broadly for two purposes: it is traded as a digital currency exchange like other cryptocurrencies, and it is used inside Ethereum to run applications and even to monetize work.\nAccording to Ethereum, it can be used to “codify, decentralize, secure, and trade just about anything.” One of the big projects around Ethereum is Microsoft’s partnership with ConsenSys which offers “Ethereum Blockchain as a Service (EBaaS) on Microsoft Azure so Enterprise clients and developers can have a single click cloud-based blockchain developer environment.”\nIn 2016, Ethereum was split into two separate blockchains, Ethereum, and Ethereum Classic, after a malicious actor stole more than $50 million worth of funds which had been raised on the DAO, a set of smart contracts originating from Ethereum's software platform. The new Ethereum was a hard fork from the original software intended to protect against further malware attacks. As of September 2019, Ethereum was the second-largest virtual currency on the market, behind only Bitcoin. It is much faster to acquire ether currency than bitcoin (about 14 or 15 seconds to bitcoin's near-uniform 10 minutes), and there are far more ether units in circulation than there is bitcoin.",
+"image": "https://hub.textile.io/thread/bafkvkx7v2ggnloortiy7wjnherqxq6n6hkfw63wviiwmrlgctjtq76y/buckets/bafzbeiahmkcjsgnggkxchvsykkifw4zl5dcmrnno4pqhqeojuj6fpvdmx4/images/QmTYPHe71JLNo6SmPiNHkoCNKyJKEWRwzRKSRvnGdGG3Fu-original.png"
+          },
+          "comments": [
+            {
+              "body": "Can you still become a validator? Or is it capped?",
+              "replies": [
+                "You can still join, minimum ETH staked necessary is 524,288, but 623,520 has already been staked.",
+                "Are rewards reduced as more people join?",
+                "Yes, but this is testnet, so it's just fake ETH being at stake for 3 months to simulate mainnet conditions"
+              ]
+            },
+            {
+              "body": "Can I stake with my RPI Raspberry (Arm proc.) Pi 2B (with Debian-based Raspberry Pi OS) ?",
+              "replies": [
+                "I have successfully tried out prysm and lighthouse on rpi 4. Anyhow, you will need a 64bit operating system. I am not sure, if a rpi2 supports that! I would also recommand a ssd on usb 3. This is only possible on a rpi4!"
+              ]
+            },
+            {
+              "body": "Can I stake from my ledger?",
+              "replies": [
+                "No. There is no hardware wallet support yet."
+              ]
+            }
+          ]
+        },
+        {
+          "post": {
+            "title": "How to Store Digital Assets on Ethereum",
+            "body": "With the rising popularity of cryptocurrencies, more and more users are entering the space, and the number of Ethereum addresses in use is skyrocketing. As of May 23rd, 2018, Ethereum achieved a market capitalization of 64 billion USD while the top 100 Ethereum based tokens account for another 39 billion USD.\nThe increasing amount of users also results in higher volumes of funds that need to be stored on the Ethereum blockchain. Since blockchains are fundamentally different from what crypto newbies might be used to when interacting with their banks or online banking interfaces, storing funds will be one of the challenges every new user will run into fairly quickly.\nIn this post, we’d like to provide both an overview and a (critical) analysis of the different ways users can store funds on Ethereum at the moment.",
+            "image": "https://hub.textile.io/thread/bafkvkx7v2ggnloortiy7wjnherqxq6n6hkfw63wviiwmrlgctjtq76y/buckets/bafzbeiahmkcjsgnggkxchvsykkifw4zl5dcmrnno4pqhqeojuj6fpvdmx4/images/QmZkhxF2KZGGDp3fUZK8muddSgnDmLTaSwmx5v5omQ71Ei-original.png"
+          },
+          "comments": [
+            {
+              "body": "You missed the key point of the Title, Storing Digital Assets, since this mostly repeats what ethereum is and how to use it in its simplest form. you talked about crypto, but in all tense and purposes, this is allocating a counter to and individual, a coin or counter is created, then the owner passes this to a wallet address, the transaction history shows they received it. but storing digital assets refers to physical world assets, you would need to assign a hash or other identifier that can be relayed to the real world, and then passed from wallet address to wallet address. but what format would this asset key be? If you create a smart contract and call it, my paintings, then each count, coin or hash would be referred to a different owner, then when ownership changes, this would be passed as a transaction. What I am interested in is the best practice in this area. for example, do we create a smart contract for a single asset, and just pass the owner around? or do we create a contract of paintings, assign a value, and pass the value around?",
+              "replies": []
+            },
+            {
+              "body": "Very good write-up and helpful",
+              "replies": []
+            },
+            {
+              "body": "Thanks for sharing — definitely helpful for people trying to take total control over their personal finance.",
+              "replies": []
+            }
+          ]
+        },
+        {
+          "post": {
+            "title": "The keys to keeping your crypto safe",
+            "body": "Keeping your crypto safe doesn’t have to be daunting. In this piece. Coinbase VP of Security, Philip Martin, offers some best practices to stay one step ahead of hackers and scammers.\nOne of the primary benefits of cryptocurrencies is that they allow people to engage in online transactions without the need for an intermediary like a bank or credit-card company. Instead, anyone who wants to send or receive cryptocurrency creates a “cryptographic key” — a file containing a random secret code — that can then be used to authorize transactions from their cryptocurrency wallets. If an attacker gets access to that key, they instantly gain control the cryptocurrency wallet as if they were the owner. That’s why it’s critical to protect your keys if you manage them yourself, and lock down your accounts at trusted third-party services like Coinbase that help manage your keys for you.\nCyber criminals rely on a number of techniques to try to separate you from your cryptocurrency. They will sometimes pose as someone trustworthy and try to convince you to hand over account information, a kind of online threat known as social engineering. Or they might collect personal information you’ve shared on social media to impersonate you and access your email or mobile phone accounts. These threats pose the biggest risk to buying and selling crypto on trusted exchanges. In fact, the greatest threat we’ve seen to people losing their crypto is human error, not the technology itself.\nCoinbase works hard to fight fraud from within the platform. For extra security, here are steps you can take to ensure your crypto stays in your hands, and only your hands."
+          },
+          "comments": [
+            {
+              "body": "Seems like the right crypto security we all need.",
+              "replies": []
+            },
+            {
+              "body": "Really?",
+              "replies": [
+                "Curious about the project? feel free to ask any questions and I'll do my best to clarify :)"
+              ]
+            },
+            {
+              "body": "oh good, seems good",
+              "replies": [
+                "We're in our last week of ICO so if you'd use such a service, please come support us by getting some tokens!"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+{
+      "space": {
+        "title": "IPFS blog",
+        "desc": "IPFS stands for Interplanetary File System. At its core it is a versioned file system which can store files and track versions over time, very much like Git. It also defines how files move across a network, making it a distributed file system, much like BitTorrent. In combining these two properties, IPFS enables a new permanent web and augments the way we use existing internet protocols like HTTP.\nSimply put, the internet is a collection of protocols that describe how data moves around a network. Developers adopted these protocols over time and built their applications on top of this infrastructure. One of the protocols that serves as the backbone of the web is HTTP or HyperText Transfer Protocol. This was invented by Tim Berners-Lee in 1991.",
+        "avatar": "https://hub.textile.io/thread/bafkvkx7v2ggnloortiy7wjnherqxq6n6hkfw63wviiwmrlgctjtq76y/buckets/bafzbeiahmkcjsgnggkxchvsykkifw4zl5dcmrnno4pqhqeojuj6fpvdmx4/images/QmXp7M4fF7viNAgtmy6THa1oTmA3VHV3gjQtY5FwBBqteW-original.png"
+      },
+      "posts": [
+        {
+          "post": {
+            "title": "IPFS and the Future of the Internet",
+            "body": "What is IPFS ?\n\nToday, I am going to talk about Interplanetary File System’s (IPFS) — what is it and why you should care.\nI swear I’m not quoting some intergalactic technology from Startrek… well, sort of. I’m sure many are now familiar with fundamental blockchain architecture principles such as decentralized databases and immutable audit trails.\nIPFS too is similar to these, since it is an open-source, peer-to-peer decentralized way of storing and accessing data.\n\nTraditionally, storing and accessing data digitally via the Internet is done through HyperText Transfer Protocol (HTTP). Your device’s IP address is used to identify the specific server that is hosting the requested information, through location-based addressing.\n\nData is identified by identifying where it is located rather than by its content. If the hosting server goes down, by accident or on purpose, expect a 500 series error code.\nToday’s web is quite centralized, causing unnecessary inefficiencies, expenses, and limiting opportunity.",
+            "image": "https://hub.textile.io/thread/bafkvkx7v2ggnloortiy7wjnherqxq6n6hkfw63wviiwmrlgctjtq76y/buckets/bafzbeiahmkcjsgnggkxchvsykkifw4zl5dcmrnno4pqhqeojuj6fpvdmx4/images/QmSiUPHxSEMJcXftnMFDxbenvxaJhAhxpojuimrV3CBPeE-original.png"
+          },
+          "comments": [
+            {
+              "body": "Nice article, it explains concisely the basics of IPFS. After finishing it, one questions came to my mind: it makes sense that IPFS isn’t used on the EVM, because of the cost it would generate, but then, who is going to maintain a P2P node without any reward? And how do you ensure that malicious nodes don’t take over the network? Are there any plans to create a specific blockchain network with low transaction costs for IPFS?",
+              "replies": [
+                "That’s correct.\n\nIPFS does not have any incentive layer involved, which is the Achilles heel for the IPFS to scale. In order to sustain these ecosystems, the dApps utilizing IPFS will have to act as an incentive layer. This is already done by many dApps that are using IPFS as a decentralized store.\n\nHave a nice day :)"
+              ]
+            },
+            {
+              "body": "that's very interesting! great work. :)"
+            },
+            {
+              "body": "While cool, this shows how impractical IPFS is. 20 hours vs 5 minutes? Nobody but really passionate nerds is going to use IPFS.",
+              "replies": [
+                "Someone else managed to get practical times by not using --nocopy, but I only have 2 TB so I can't do that.\n\nIPFS doesn't use all available resources yet for hashing. It looks like hashing is done synchronously. If it did hash asynchronously, I'm sure we'd have better times.\n\nAnother problem is that I'm re-hashing everything instead of adding the diff to MFS. If I only added the difference between two rsyncs, then I'd probably have only 20 minutes delay instead of 20 hours.\n\nMany problems I have can be solved by either having more storage, more time to make it better, or by improving IPFS itself. But yeah, only very passionate nerds can use IPFS for package managers right now."
+              ]
+            }
+          ]
+        },         {
+          "post": {
+            "title": "Decentralizing your Website",
+            "body": "When hosting a website usually you use a dedicated VPS like Digital Ocean, Linode, Google, or Amazon. After setting up your server you can register a domain at Google Domains or NameCheap. The last step is editing your DNS records to point your domain at your server. Now you can access your website by navigating to your domain name. However, there is a problem with this. Your VPS controls the hosting of your site and the domain name service you went with maintains control of your domain. What happens if your VPS goes down or the company you are using is suddenly blacklisted in your country? What if ICANN takes your domain from you? Or your domain name service shuts down?\n\nWhile these are very unlikely they are important and get you thinking about what would you do if you couldn’t host your website anymore or your domain was taken away.\n\nUsing IPFS (InterPlanetary File System) and ENS (Ethereum Name Service) you can host and serve your website in a completely decentralized way.",
+            "image": "https://hub.textile.io/thread/bafkvkx7v2ggnloortiy7wjnherqxq6n6hkfw63wviiwmrlgctjtq76y/buckets/bafzbeiahmkcjsgnggkxchvsykkifw4zl5dcmrnno4pqhqeojuj6fpvdmx4/images/QmZSc165LrswHLRTaPZjSpR7acWJ831HYScBSfNHL7Xc9f-original.png"
+          },
+          "comments": [
+            {
+              "body": "You missed the key point of the Title, Storing Digital Assets, since this mostly repeats what ethereum is and how to use it in its simplest form. you talked about crypto, but in all tense and purposes, this is allocating a counter to and individual, a coin or counter is created, then the owner passes this to a wallet address, the transaction history shows they received it. but storing digital assets refers to physical world assets, you would need to assign a hash or other identifier that can be relayed to the real world, and then passed from wallet address to wallet address. but what format would this asset key be? If you create a smart contract and call it, my paintings, then each count, coin or hash would be referred to a different owner, then when ownership changes, this would be passed as a transaction. What I am interested in is the best practice in this area. for example, do we create a smart contract for a single asset, and just pass the owner around? or do we create a contract of paintings, assign a value, and pass the value around?",
+              "replies": []
+            },
+            {
+              "body": "Very good write-up and helpful",
+              "replies": []
+            },
+            {
+              "body": "Thanks for sharing — definitely helpful for people trying to take total control over their personal finance.",
+              "replies": []
+            }
+          ]
+        },         {
+          "post": {
+            "title": "Genuine question. How could anybody get IPFS to work?",
+            "body": "For two years now I've had a tab open on IPFS because it really looks like a fresh take on the currently decaying, very centralised web. However, every single time I try it, it kills my router https://github.com/ipfs/go-ipfs/issues/3320.\n\nI have no idea how Textile and some other companies are shipping IPFS products at this stage."
+          },
+          "comments": [
+            {
+              "body": "Things that might help:\n\n1. Set HighWater/LowWater to small values\n2. Try the low-power profile ipfs init -p lowpower (disables DHT server)\n3. Set your IPFS node as a DMZ host to alleviate your router's NAT table. 1. Disable NAT discovery (DisableNatPortMap = true)\n4. Disable Multicast DNS (mDNS) 'Discovery.MDNS'\n5. Add Swarm Filters to block your own local network (makes network less chatty?\n6. Disable relay connections \"Swarm.DisableRelay\" and \"EnableRelayHop = false\" (further reduces connections?)\n\n\nGood luck.",
+              "replies": ["Man, really? Has it come to that?\n\nI've also noticed that the highwater/lowwater is only like a basic recommendation, it seems to spike way above whatever maximum I set.\n\nI also have the same problem as OP where apparently my network can't withstand the connections for some reason, even with init -p lowpower."]
+            },
+            {
+              "body": "Ran into the same issue, no amount of playing with HighWater/LowWater solved the issue, might have lessened it a bit, but router still crashes every couple of days. Renders IPFS sadly completely unusable.",
+              "replies": ["It does kind of sound like a problem with the router rather than ipfs, but perhaps it could be mitigated on the ipfs side."]
+            },
+            {
+              "body": "What model of router do you have?",
+              "replies": [
+                ")))))))))))))))))"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
