@@ -108,7 +108,7 @@ export const importDataFromJson = async (
 
       for (const { body, replies } of comments) {
         const newComment: CommentValue = {
-          owner: await getOwner(),
+          owner: getOwner(),
           body: body?.trim(),
           created: {
             account: owner,
@@ -121,7 +121,7 @@ export const importDataFromJson = async (
         if (replies) {
           for (const reply of replies) {
             const newReply: CommentValue = {
-              owner: await getOwner(),
+              owner: getOwner(),
               body: reply?.trim(),
               created: {
                 account: owner,

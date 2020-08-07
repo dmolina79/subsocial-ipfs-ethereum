@@ -33,7 +33,7 @@ export const AuthModal = ({ open, close }: AuthModal) => {
     // TODO validating in eth
     return {
       domain,
-      wallet: (window as any).web3?.eth?.accounts[0] || '0x111111111111111111111111111'
+      wallet: (window as any).web3?.eth?.accounts[0] || '0x3ABF0dc4d2605Fcdb60391669e8706f1114d2387'
     }
   }
 
@@ -65,7 +65,7 @@ export const AuthModal = ({ open, close }: AuthModal) => {
           { required: true, message: 'Crypto domain is required.' }
         ]}
       >
-        <Input placeholder='Your .crypto domain:' addonAfter='' />
+        <Input placeholder='Your .crypto domain:' addonAfter={DOMAIN_NAME} />
       </Form.Item>
     </Modal>
   </Form>

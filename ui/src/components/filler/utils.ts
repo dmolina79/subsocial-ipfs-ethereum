@@ -1,5 +1,4 @@
 import { SpacesJson } from "./filler";
-import { Libp2pCryptoIdentity } from '@textile/threads-core';
 
 export const parseJsonFromFile = async (file: File | Blob): Promise<SpacesJson> => {
   return new Promise(function(resolve) {
@@ -17,4 +16,4 @@ export const parseJsonFromFile = async (file: File | Blob): Promise<SpacesJson> 
   })
 }
 
-export const getOwner = async () => (await Libp2pCryptoIdentity.fromRandom()).toString()
+export const getOwner = () => `someuser.${new Date().getMilliseconds()}.crypto`

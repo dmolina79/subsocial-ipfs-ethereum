@@ -38,7 +38,7 @@ export const OrbitDbProvider = (props: React.PropsWithChildren<{}>) => {
       // 03c4097f9403cd349a867455fa80272171fbb20a604e8a572aff8d30ac073a0b7b
 
       const ipfs = await IPFS.create({
-        repo: '/orbitdb/hackfs/dapp2',
+        repo: '/orbitdb/hackfs/dappforce',
         start: true,
         // preload: {
         //   enabled: false
