@@ -109,7 +109,7 @@ export const InnerViewPost = ({
   >
     <List.Item.Meta
       avatar={<Avatar icon={<Jdenticon value={owner}/>} />}
-      title={<>{`${owner} in `}<SpaceLink path={spacePath}>{spaceTitle}</SpaceLink></>}
+      title={<>{owner}<span className='text-muted'> in </span><SpaceLink path={spacePath}>{spaceTitle}</SpaceLink></>}
       description={<span>
         <Tooltip title={time.format('YYYY-MM-DD HH:mm:ss')}>
           <PostLink path={path} style={{ color: '#8c8c8c', fontSize: '.85rem' }}>{time.fromNow()}</PostLink>

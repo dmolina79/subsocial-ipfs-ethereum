@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Form, Input, Empty, Button, notification, Tabs, Checkbox } from 'antd'
+import { Form, Input, Empty, Button, notification, Tabs, Checkbox, Row, Col } from 'antd'
 import { useRouter } from 'next/router'
 import { PostDto, AllValues, CommentsLinks } from './types'
 import { SpaceDto } from '../spaces/types'
@@ -224,9 +224,14 @@ export function InnerForm (props: FormProps) {
       setSubmitting(true)
       const postId = await addPost()
       setSubmitting(false)
-      goToView(postId) // TODO uncomment when post encryption fixed
+      goToView(postId)
     }
   }
+  
+  
+  // TODO this doesn't work :(
+  // const encrypted = true === form.getFieldValue(fieldName('encrypted')) as boolean
+  // console.log('encryoted:', form.getFieldValue(fieldName('encrypted')))
 
   return <Form form={form} initialValues={initialValues} {...layout}>
       {isTitle && <Form.Item
@@ -249,6 +254,35 @@ export function InnerForm (props: FormProps) {
       >
         <Checkbox>Encrypt content of this post</Checkbox>
       </Form.Item>
+
+
+      {/* encrypted && */ <Form.Item
+        // name='price'
+        label='Price per view'
+        // hasFeedback
+        // rules={[
+        //   { required: true, type: 'number', message: 'Price is required for encrypted post' },
+        //   { min: 0.000001, message: 'Price should be greater than zero' }
+        // ]}
+      >
+        <Row gutter={8}>
+          <Col span={10}>
+            <Form.Item
+              name="price"
+              noStyle
+              rules={[
+                { required: true, type: 'number', message: 'Price is required for encrypted post' },
+                { min: 0.000001, message: 'Price should be greater than zero' }
+              ]}
+            >
+              <Input addonAfter='ETH' placeholder='e.g. 0.01' defaultValue={0.02} />
+            </Form.Item>
+          </Col>
+          <Col span={14}>
+            <Button type='primary' ghost onClick={() => alert('Set price in smart contract')}>Set price</Button>
+          </Col>
+        </Row>
+      </Form.Item>}
 
       <Form.Item
         name={fieldName('body')}
