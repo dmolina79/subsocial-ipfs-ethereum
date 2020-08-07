@@ -166,9 +166,9 @@ export function InnerForm (props: FormProps) {
         signedSecretHash
       }
     
-      console.log('contentEnc', contentEnc)
-      console.log('secretEnc', secretEnc)
-      console.log('api params', apiParams)
+      // console.log('contentEnc', contentEnc)
+      // console.log('secretEnc', secretEnc)
+      // console.log('api params', apiParams)
 
       await axios({
         // method: 'post',
@@ -178,7 +178,7 @@ export function InnerForm (props: FormProps) {
 
       const contentForOrbit = { body, encryptionNonce, secretHash, ...contentWoBody }
 
-      console.log('content for Orbit', contentForOrbit)
+      console.log('Post content for Orbit', contentForOrbit)
 
       return contentForOrbit
     }
