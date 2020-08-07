@@ -1,9 +1,28 @@
 import React, { useState } from 'react';
 import { useAuthContext } from './AuthContext';
 import Modal from 'antd/lib/modal/Modal';
-import { Form, Input, Button } from 'antd';
+import { Form, Input, Button, notification } from 'antd';
 import { LoginOutlined } from '@ant-design/icons';
-import ethers from 'ethers'
+import Resolution from '@unstoppabledomains/resolution'
+
+const infuraProjId = process.env.NEXT_PUBLIC_INFURA_PROJECT_ID
+const infuraApiUrl = `https://mainnet.infura.io/v3/${infuraProjId}`
+
+const resolution = new Resolution({
+  blockchain: {
+    ens: { url: infuraApiUrl },
+    cns: { url: infuraApiUrl }
+  }
+})
+
+async function getDomainOwner(cryptoDomain: string) {
+  return await resolution.owner(cryptoDomain)
+}
+
+async function isDomainOwner(cryptoDomain: string, maybeOwnerEthAddr: string) {
+  const realOwner = (await getDomainOwner(cryptoDomain))?.toLowerCase()
+  return realOwner === maybeOwnerEthAddr.toLowerCase()
+}
 
 const DOMAIN_NAME = '.crypto'
 
@@ -15,14 +34,6 @@ type AuthModal = {
 export const AuthModal = ({ open, close }: AuthModal) => {
   const { signIn, profile } = useAuthContext()
   const [ form ] = Form.useForm()
-
-  const onSuccess = () => {
-    console.warn('TODO: implement this function')
-  }
-
-  const onFailed = () => {
-    console.warn('TODO: implement this function')
-  }
 
   const validateMyCryptoDomain = async (domain: string) => {
     const { ethereum, Web3 } = (window as any)
@@ -49,18 +60,28 @@ export const AuthModal = ({ open, close }: AuthModal) => {
       console.error('Cannot access the current Ethereum account')
       return
     }
-    
-    const tokenId = ethers.utils.namehash(domain)
 
-    // TODO validating in eth
+    const isMyDomain: boolean = await isDomainOwner(domain, myEthAddr)
+    const placement = 'bottomLeft'
 
-    const sameAsMyEthAddr = !!tokenId
+    if (isMyDomain) {
+      notification.open({
+        placement, 
+        type: 'success',
+        message: 'Successfully signed in'
+      })
 
-    sameAsMyEthAddr ? onSuccess() : onFailed()
-
-    return {
-      domain,
-      wallet: myEthAddr
+      return {
+        domain,
+        wallet: myEthAddr
+      }
+    } else {
+      notification.open({
+        placement,
+        type: 'error',
+        message: 'Failed to sign in',
+        description: `You are not an owner of this domain: ${domain}`,
+      })
     }
   }
 
