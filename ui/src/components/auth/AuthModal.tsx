@@ -93,7 +93,7 @@ export const AuthModal = ({ open, close }: AuthModal) => {
           { required: true, message: 'Crypto domain is required.' }
         ]}
       >
-        <Input placeholder='Your .crypto domain:' addonAfter='' />
+        <Input placeholder='Your .crypto domain:' addonAfter={DOMAIN_NAME} />
       </Form.Item>
     </Modal>
   </Form>
