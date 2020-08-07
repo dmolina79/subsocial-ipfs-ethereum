@@ -20,11 +20,9 @@ import { SpaceStore } from '../spaces/SpaceContext';
 import { SpaceLink } from '../spaces/ViewSpace';
 import axios from 'axios'
 import { GetSecretParams, GetSecretRes } from '../../pages/api/secrets/get';
-import { drizzleReactHooks } from '@drizzle/react-plugin'
+import { useMyEthAddress } from '../eth'
 import nacl from 'tweetnacl'
 import { bytesToBase64, base64ToBytes, bytesToUtf8 } from '../../utils';
-
-const { useDrizzleState } = drizzleReactHooks
 
 type ViewPostProps = {
   space: SpaceDto,
@@ -128,8 +126,7 @@ const Title = ({ post: { content: { title}, path } }: ViewPostProps) =>
 const Body = ({ post: { content }, preview }: ViewPostProps) => {
   const { title, encrypted, encryptionNonce, secretHash } = content
   const [ decryptedContent, setDecryptedContent ] = useState<string>()
-  const drizzleState = useDrizzleState(state => state)
-  const buyerEthAddress = drizzleState.accounts[0]
+  const buyerEthAddress = useMyEthAddress()
 
   const onDecryptContent = async () => {
     const buyerKeys = nacl.box.keyPair()

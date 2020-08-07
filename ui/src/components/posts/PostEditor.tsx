@@ -16,10 +16,9 @@ import { useMyDomain } from '../auth/AuthContext'
 import { encryptContent, encryptSecretForApi, web3 } from '../../utils'
 import axios from 'axios'
 import { StoreSecretParams } from '../../pages/api/secrets/store'
-import { drizzleReactHooks } from '@drizzle/react-plugin'
+import { useMyEthAddress } from '../eth'
 
 const { TabPane } = Tabs;
-const { useDrizzleState } = drizzleReactHooks
 
 const layout = {
   labelCol: { span: 4 },
@@ -78,10 +77,7 @@ export function InnerForm (props: FormProps) {
   const [ form ] = Form.useForm()
   const router = useRouter()
   const owner = useMyDomain()
-  const { orbitdb } = useOrbitDbContext()
-
-  const drizzleState = useDrizzleState(state => state)
-  const authorEthAddress = drizzleState.accounts[0]
+  const authorEthAddress = useMyEthAddress()
 
   const { orbitdb } = useOrbitDbContext()
   const { spacesPath } = useSpaceStoreContext()
