@@ -16,7 +16,12 @@ import { useMyDomain } from '../auth/AuthContext'
 import { encryptContent, encryptSecretForApi, web3 } from '../../utils'
 import axios from 'axios'
 import { StoreSecretParams } from '../../pages/api/secrets/store'
-import { useMyEthAddress } from '../eth'
+import { useMyEthAddress, useDrizzleState } from '../eth'
+import { drizzleReactHooks } from '@drizzle/react-plugin'
+
+import BN from 'bn.js'
+
+const { useDrizzle } = drizzleReactHooks
 
 const { TabPane } = Tabs;
 
@@ -82,10 +87,24 @@ export function InnerForm (props: FormProps) {
   const { orbitdb } = useOrbitDbContext()
   const { spacesPath } = useSpaceStoreContext()
   const { postStore, nextPostId, postsPath } = usePostStoreContext()
+  const { drizzle } = useDrizzle()
+  const drizzleState = useDrizzleState()
+  const myEthAddr = useMyEthAddress()
+
+  console.log({ drizzle, drizzleState })
 
   if (!space) return <Empty description='Space not found' />
 
   const initialValues = getInitialValues({ space, post })
+
+  const setPostPrice = async () => {
+    const spaceId = 1 // TODO get synamically
+    const postId = post?.path || '/orbitdb/zdpuAvhJRXBSzoqppjVYnap9N3acvT5Uq59i6dGUQBeyAH6eT/spaces/1/posts/1'
+    const price = new BN(0.02)
+    drizzle.contracts.Creadit.methods
+      .setPricePerView(spaceId, postId, price)
+      .send({ from: myEthAddr })
+  }
 
   const getFieldValues = (): FormValues => {
     return form.getFieldsValue() as FormValues
@@ -257,13 +276,7 @@ export function InnerForm (props: FormProps) {
 
 
       {/* encrypted && */ <Form.Item
-        // name='price'
         label='Price per view'
-        // hasFeedback
-        // rules={[
-        //   { required: true, type: 'number', message: 'Price is required for encrypted post' },
-        //   { min: 0.000001, message: 'Price should be greater than zero' }
-        // ]}
       >
         <Row gutter={8}>
           <Col span={10}>
@@ -271,15 +284,15 @@ export function InnerForm (props: FormProps) {
               name="price"
               noStyle
               rules={[
-                { required: true, type: 'number', message: 'Price is required for encrypted post' },
-                { min: 0.000001, message: 'Price should be greater than zero' }
+                // { required: true, message: 'Price is required for encrypted post' },
+                // { min: 0.000001, type: 'number', message: 'Price should be greater than zero' }
               ]}
             >
-              <Input addonAfter='ETH' placeholder='e.g. 0.01' defaultValue={0.02} />
+              <Input type='number' addonAfter='ETH' placeholder='e.g. 0.01' defaultValue={0.02} />
             </Form.Item>
           </Col>
           <Col span={14}>
-            <Button type='primary' ghost onClick={() => alert('Set price in smart contract')}>Set price</Button>
+            <Button type='primary' ghost onClick={setPostPrice}>Set price</Button>
           </Col>
         </Row>
       </Form.Item>}
