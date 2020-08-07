@@ -24,24 +24,52 @@ export const AuthModal = ({ open, close }: AuthModal) => {
     console.warn('TODO: implement this function')
   }
 
-  const validating = (domain: string) => {
+  const validateMyCryptoDomain = async (domain: string) => {
+    const { ethereum, Web3 } = (window as any)
+
+    if (!ethereum) {
+      console.error('window.ethereum is undefined')
+      return
+    }
+
+    if (!Web3) {
+      console.error('window.Web3 is undefined')
+      return
+    }
+
+    const web3 = new Web3(ethereum)
+    const [ myEthAddr ] = await ethereum.enable().catch((err: any) => {
+      console.error(`User denied access to their Ethereum account. ${err}`)
+    })
+
+    console.log('web3', web3)
+    console.log('myEthAddr', myEthAddr)
+
+    if (!myEthAddr) {
+      console.error('Cannot access the current Ethereum account')
+      return
+    }
+    
     const tokenId = ethers.utils.namehash(domain)
 
-    const validate = !!tokenId
-
-    validate ? onSuccess() : onFailed()
     // TODO validating in eth
+
+    const sameAsMyEthAddr = !!tokenId
+
+    sameAsMyEthAddr ? onSuccess() : onFailed()
+
     return {
       domain,
-      wallet: (window as any).web3?.eth?.accounts[0] || '0x3ABF0dc4d2605Fcdb60391669e8706f1114d2387'
+      wallet: myEthAddr
     }
   }
 
-  const onSignIn = () => {
-    const domain = form.getFieldsValue()['domain'] + DOMAIN_NAME
-    console.log(domain)
+  const onSignIn = async () => {
+    const myDomain = (form.getFieldsValue()['domain'] + DOMAIN_NAME)?.trim()
+    console.log('myDomain:', myDomain)
     
-    signIn(validating(domain.trim()))
+    const validInfo = await validateMyCryptoDomain(myDomain)
+    validInfo && signIn(validInfo)
   }
 
   return <Form form={form}>
